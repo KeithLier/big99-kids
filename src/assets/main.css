@@ -1,0 +1,58 @@
+:root {
+  --primary-green: #1f9d4c;
+  --primary-orange: #ff7043;
+  --primary-gold: #ffb300;
+  --primary-blue: #29b6f6;
+  --primary-purple: #8e24aa;
+  --bg-cream: #fcfaf0;
+  --text-dark: #232b2b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Rounded Mplus 1c", sans-serif;
+  background: linear-gradient(135deg, #e0f7fa 0%, #fff9c4 50%, #fce4ec 100%);
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--text-dark);
+  overflow-x: hidden;
+}
+
+button, input, select {
+  font-family: inherit;
+}
+
+/* Custom cute scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 157, 76, 0.35);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 157, 76, 0.6);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes popBounce {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}

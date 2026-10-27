@@ -1,0 +1,20 @@
+{
+  "name": "kids-study",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "萌娃智慧成长乐园 - 幼小衔接汉语拼音启蒙、亲子英语乐园、中华古诗词与大九九乘法闯关平台",
+  "scripts": {
+    "dev": "node ./run-vite.mjs",
+    "build": "node ./run-vite.mjs build",
+    "preview": "node ./run-vite.mjs preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.0"
+  }
+}
