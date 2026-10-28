@@ -658,8 +658,11 @@ function getEffectiveSpeakerName(line) {
 function playDialogueLine(line, idx) {
   playClickSound()
   currentSpeakingLineIdx.value = idx
+  const effRole = getEffectiveRole(line.role)
+  const preferredRole = effRole === 'kid' ? 'kid' : 'mom'
   speakEnglish(line.en, {
     rate: slowMode.value ? 0.65 : 0.85,
+    preferredRole,
     onEnd: () => {
       if (currentSpeakingLineIdx.value === idx) {
         currentSpeakingLineIdx.value = -1
@@ -684,8 +687,11 @@ function autoPlayWholeScene() {
       return
     }
     currentSpeakingLineIdx.value = idx
+    const effRole = getEffectiveRole(lines[idx].role)
+    const preferredRole = effRole === 'kid' ? 'kid' : 'mom'
     speakEnglish(lines[idx].en, {
       rate: slowMode.value ? 0.68 : 0.85,
+      preferredRole,
       onEnd: () => {
         idx++
         setTimeout(nextLine, 450)

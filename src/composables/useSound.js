@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useVoiceStudio } from './useVoiceStudio'
 
 const soundEnabled = ref(true)
 const isSpeaking = ref(false)
@@ -16,6 +17,17 @@ function ensureAudioContext() {
 }
 
 export function useSound() {
+  const {
+    voiceSettings,
+    lastSpokenText,
+    lastSpokenLang,
+    lastSpokenLabel,
+    getVoiceClipRecord,
+    playBlobAudio,
+    stopCustomAudio,
+    synthesizeWithAiClone
+  } = useVoiceStudio()
+
   function playTone(freq = 520, duration = 0.12, type = 'sine', delay = 0) {
     if (!soundEnabled.value) return
     try {
@@ -58,13 +70,14 @@ export function useSound() {
   }
 
   function stopSpeech() {
+    stopCustomAudio()
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
     }
     isSpeaking.value = false
   }
 
-  function speakText(text, options = {}) {
+  function speakNativeTts(text, lang = 'zh-CN', options = {}) {
     const { rate = 0.9, pitch = 1.08, onEnd = null, onBoundary = null } = options
     if (!soundEnabled.value || !('speechSynthesis' in window)) {
       if (onEnd) setTimeout(onEnd, 300)
@@ -73,15 +86,23 @@ export function useSound() {
     try {
       window.speechSynthesis.cancel()
       const utter = new SpeechSynthesisUtterance(text)
-      utter.lang = 'zh-CN'
+      utter.lang = lang
       utter.rate = rate
       utter.pitch = pitch
 
       const voices = window.speechSynthesis.getVoices()
-      const zhVoice =
-        voices.find(v => v.lang.includes('zh-CN') && (v.name.includes('Ting') || v.name.includes('Meijia') || v.name.includes('Xiaoxiao'))) ||
-        voices.find(v => v.lang.includes('zh'))
-      if (zhVoice) utter.voice = zhVoice
+      if (lang.startsWith('en')) {
+        const enVoice =
+          voices.find(v => (v.lang === 'en-US' || v.lang === 'en_US') && (v.name.includes('Samantha') || v.name.includes('Ava') || v.name.includes('Victoria') || v.name.includes('Google') || v.name.includes('Jenny'))) ||
+          voices.find(v => v.lang.startsWith('en-US') || v.lang.startsWith('en_US')) ||
+          voices.find(v => v.lang.startsWith('en'))
+        if (enVoice) utter.voice = enVoice
+      } else {
+        const zhVoice =
+          voices.find(v => v.lang.includes('zh-CN') && (v.name.includes('Ting') || v.name.includes('Meijia') || v.name.includes('Xiaoxiao'))) ||
+          voices.find(v => v.lang.includes('zh'))
+        if (zhVoice) utter.voice = zhVoice
+      }
 
       isSpeaking.value = true
       if (onBoundary) {
@@ -102,40 +123,79 @@ export function useSound() {
     }
   }
 
-  function speakEnglish(text, options = {}) {
-    const { rate = 0.85, pitch = 1.05, onEnd = null } = options
-    if (!soundEnabled.value || !('speechSynthesis' in window)) {
+  async function dispatchSmartSpeech(text, lang = 'zh-CN', options = {}) {
+    if (!text) return
+    const {
+      forceSystem = false,
+      preferredRole = null,
+      label = '',
+      onEnd = null
+    } = options
+
+    // Record as current active phrase for the "边学边录" floating capsule
+    if (!options.ignoreTracker) {
+      lastSpokenText.value = text
+      lastSpokenLang.value = lang
+      lastSpokenLabel.value = label || text
+    }
+
+    if (!soundEnabled.value) {
       if (onEnd) setTimeout(onEnd, 300)
       return
     }
-    try {
-      window.speechSynthesis.cancel()
-      const utter = new SpeechSynthesisUtterance(text)
-      utter.lang = 'en-US'
-      utter.rate = rate
-      utter.pitch = pitch
 
-      const voices = window.speechSynthesis.getVoices()
-      const enVoice =
-        voices.find(v => (v.lang === 'en-US' || v.lang === 'en_US') && (v.name.includes('Samantha') || v.name.includes('Ava') || v.name.includes('Victoria') || v.name.includes('Google') || v.name.includes('Jenny'))) ||
-        voices.find(v => v.lang.startsWith('en-US') || v.lang.startsWith('en_US')) ||
-        voices.find(v => v.lang.startsWith('en'))
-      if (enVoice) utter.voice = enVoice
+    stopSpeech()
 
-      isSpeaking.value = true
-      utter.onend = () => {
-        isSpeaking.value = false
-        if (onEnd) onEnd()
+    const targetRole = preferredRole || voiceSettings.value.activeRole
+    if (!forceSystem && targetRole !== 'system') {
+      // 1. Priority 1: Check local IndexedDB recorded human voice
+      const customRec = await getVoiceClipRecord(text, targetRole)
+      if (customRec && customRec.blob) {
+        isSpeaking.value = true
+        const played = await playBlobAudio(customRec.blob, () => {
+          isSpeaking.value = false
+          if (onEnd) onEnd()
+        })
+        if (played) return
       }
-      utter.onerror = () => {
-        isSpeaking.value = false
-        if (onEnd) onEnd()
+
+      // 2. Priority 2: Check AI Zero-shot Voice Cloning if enabled
+      if (voiceSettings.value.aiCloneEnabled && voiceSettings.value.aiApiKey) {
+        isSpeaking.value = true
+        const aiBlob = await synthesizeWithAiClone(text)
+        if (aiBlob) {
+          const played = await playBlobAudio(aiBlob, () => {
+            isSpeaking.value = false
+            if (onEnd) onEnd()
+          })
+          if (played) return
+        }
       }
-      window.speechSynthesis.speak(utter)
-    } catch (e) {
-      isSpeaking.value = false
-      if (onEnd) onEnd()
     }
+
+    // 3. Priority 3: Seamless fallback to browser native TTS
+    speakNativeTts(text, lang, options)
+  }
+
+  function speakText(text, options = {}) {
+    dispatchSmartSpeech(text, 'zh-CN', {
+      rate: 0.9,
+      pitch: 1.08,
+      ...options
+    })
+  }
+
+  function speakEnglish(text, options = {}) {
+    dispatchSmartSpeech(text, 'en-US', {
+      rate: 0.85,
+      pitch: 1.05,
+      ...options
+    })
+  }
+
+  function speakSystemOnly(text, lang = 'zh-CN', options = {}) {
+    stopSpeech()
+    speakNativeTts(text, lang, options)
   }
 
   function toggleSound() {
@@ -157,6 +217,7 @@ export function useSound() {
     playVictoryFanfare,
     speakText,
     speakEnglish,
+    speakSystemOnly,
     stopSpeech,
     toggleSound
   }

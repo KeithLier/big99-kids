@@ -27,6 +27,9 @@
           <router-link to="/big99" class="nav-pill math-pill" active-class="active" @click="playClickSound">
             <span>🎠</span> 大九九乐园
           </router-link>
+          <router-link to="/voice-studio" class="nav-pill voice-pill" active-class="active" @click="playClickSound">
+            <span>🎙️</span> 自己的声音({{ currentRoleObj.shortName }})
+          </router-link>
         </nav>
 
         <div class="nav-right">
@@ -68,6 +71,9 @@
     <!-- Global Handwriting Signature Modal -->
     <SignatureModal />
 
+    <!-- Global Floating Voice Recorder ("边学边录" 随手录胶囊) -->
+    <FloatingVoiceRecorder />
+
     <!-- Global Toast Notification -->
     <div class="global-toast" :class="{ show: !!globalToastMsg }">
       {{ globalToastMsg }}
@@ -78,8 +84,10 @@
 <script setup>
 import { onMounted } from 'vue'
 import SignatureModal from './components/SignatureModal.vue'
+import FloatingVoiceRecorder from './components/FloatingVoiceRecorder.vue'
 import { useKidsProfile } from './composables/useKidsProfile'
 import { useSound } from './composables/useSound'
+import { useVoiceStudio } from './composables/useVoiceStudio'
 
 const {
   kidProfile,
@@ -90,6 +98,7 @@ const {
 } = useKidsProfile()
 
 const { soundEnabled, toggleSound, playClickSound } = useSound()
+const { currentRoleObj } = useVoiceStudio()
 
 onMounted(() => {
   refreshFromStorage()
@@ -221,6 +230,19 @@ onMounted(() => {
   background: linear-gradient(135deg, #0288d1, #26c6da);
   border-color: #01579b;
   box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3);
+}
+
+.nav-pill.voice-pill {
+  background: #fff8e1;
+  border-color: #ffb300;
+  color: #bf360c;
+}
+
+.nav-pill.voice-pill.active {
+  background: linear-gradient(135deg, #ff6d00, #ff9800);
+  color: #fff;
+  border-color: #e65100;
+  box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
 }
 
 .nav-right {

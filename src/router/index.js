@@ -27,6 +27,12 @@ const router = createRouter({
       meta: { title: '🌈 英语启蒙乐园 - 字母单词与亲子情景对话剧场' }
     },
     {
+      path: '/voice-studio',
+      name: 'voice-studio',
+      component: () => import('../views/VoiceStudioView.vue'),
+      meta: { title: '🎙️ 亲子配音工坊 - 全程用自己的声音学习' }
+    },
+    {
       path: '/big99',
       name: 'big99',
       component: () => import('../views/Big99View.vue'),

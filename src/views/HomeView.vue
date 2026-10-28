@@ -38,6 +38,9 @@
             <button type="button" class="hero-btn primary-math" @click="goTo('/big99')">
               🎠 大九九乐园
             </button>
+            <button type="button" class="hero-btn voice-studio-btn" @click="goTo('/voice-studio')">
+              🎙️ 用自己的声音学
+            </button>
             <button type="button" class="hero-btn outline-btn" @click="showProfileModal = true; playClickSound()">
               ✍️ {{ kidProfile?.signatureDataUrl ? '更新手写签名' : '手写签名报到' }}
             </button>
@@ -563,6 +566,12 @@ onMounted(() => {
   background: linear-gradient(135deg, #26c6da, #0288d1);
   color: #fff;
   box-shadow: 0 5px 0 #01579b, 0 8px 20px rgba(2, 136, 209, 0.28);
+}
+
+.hero-btn.voice-studio-btn {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: #fff;
+  box-shadow: 0 5px 0 #e65100, 0 8px 20px rgba(245, 124, 0, 0.28);
 }
 
 .hero-btn.outline-btn {
