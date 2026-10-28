@@ -28,9 +28,10 @@ const router = createRouter({
     },
     {
       path: '/voice-studio',
+      alias: ['/voice-settings', '/settings'],
       name: 'voice-studio',
       component: () => import('../views/VoiceStudioView.vue'),
-      meta: { title: '🎙️ 亲子配音工坊 - 全程用自己的声音学习' }
+      meta: { title: '⚙️ 声音与音色设置中心 - 试听切换浏览器声音 & 录入个人音色' }
     },
     {
       path: '/big99',

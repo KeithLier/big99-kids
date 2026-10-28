@@ -27,8 +27,8 @@
           <router-link to="/big99" class="nav-pill math-pill" active-class="active" @click="playClickSound">
             <span>🎠</span> 大九九乐园
           </router-link>
-          <router-link to="/voice-studio" class="nav-pill voice-pill" active-class="active" @click="playClickSound">
-            <span>🎙️</span> 自己的声音({{ currentRoleObj.shortName }})
+          <router-link to="/voice-settings" class="nav-pill voice-pill" active-class="active" @click="playClickSound">
+            <span>⚙️</span> 声音设置
           </router-link>
         </nav>
 

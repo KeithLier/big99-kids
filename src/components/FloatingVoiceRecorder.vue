@@ -6,13 +6,13 @@
       type="button"
       class="pod-collapsed-btn"
       @click="toggleExpand"
-      title="打开「用自己的声音学」随手录舱"
+      title="打开「声音设置 & 随手录」"
     >
       <span class="pod-mic-icon">🎙️</span>
       <div class="pod-mini-info">
-        <span class="pod-role-tag">{{ currentRoleObj.icon }} {{ currentRoleObj.shortName }}</span>
+        <span class="pod-role-tag">{{ activeVoiceSummaryLabel }}</span>
         <span class="pod-sub-hint">
-          {{ hasCurrentPhraseRecorded ? '✅ 本句已有真人配音' : '点此录下你的声音' }}
+          {{ hasCurrentPhraseRecorded ? '✅ 本句已有真人配音' : '点此切换声音或录下原声' }}
         </span>
       </div>
       <span v-if="totalRecordedCount > 0" class="pod-count-badge">{{ totalRecordedCount }}</span>
@@ -103,11 +103,11 @@
         </button>
       </div>
 
-      <!-- Footer Link to Full Voice Studio -->
+      <!-- Footer Link to Full Voice Settings -->
       <div class="pod-footer">
-        <span class="recorded-stat">已累计录制 <strong>{{ totalRecordedCount }}</strong> 条专属语音</span>
+        <span class="recorded-stat">当前：<strong>{{ activeVoiceSummaryLabel }}</strong></span>
         <button type="button" class="open-studio-btn" @click="goToStudio">
-          🎧 进入配音工坊 & AI克隆 ➔
+          ⚙️ 更换声音 / 录入音色设置 ➔
         </button>
       </div>
     </div>
@@ -126,6 +126,7 @@ const isExpanded = ref(false)
 
 const {
   voiceSettings,
+  activeVoiceSummaryLabel,
   currentRoleObj,
   totalRecordedCount,
   lastSpokenText,
@@ -238,7 +239,7 @@ function handlePlaySystemDemo() {
 function goToStudio() {
   playClickSound()
   isExpanded.value = false
-  router.push('/voice-studio')
+  router.push('/voice-settings')
 }
 </script>
 

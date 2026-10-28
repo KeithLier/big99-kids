@@ -2,7 +2,8 @@ import { ref, computed } from 'vue'
 
 const DB_NAME = 'kids_voice_studio_db_v1'
 const STORE_NAME = 'voice_clips'
-const SETTINGS_KEY = 'kids_voice_studio_settings_v1'
+const SETTINGS_KEY = 'kids_voice_studio_settings_v2'
+const TIMBRE_SAMPLE_KEY = '__timbre_sample__::main'
 
 export const VOICE_ROLES = [
   {
@@ -31,15 +32,15 @@ export const VOICE_ROLES = [
   },
   {
     id: 'system',
-    name: '系统标准播音员',
-    shortName: '系统标准音',
-    icon: '🤖',
+    name: '浏览器内置发音人',
+    shortName: '内置声音',
+    icon: '🔊',
     color: '#2e7d32',
-    desc: '使用浏览器内置的标准普通话与美式英语发音。'
+    desc: '自由试听并切换浏览器内置的多种中文/英文发音人音色。'
   }
 ]
 
-// 10条高频亲子鼓励与日常引导语（录制后在闯关成功、打招呼时自动触发）
+// 8条高频亲子鼓励与日常引导语
 export const PRAISE_PRESETS = [
   { id: 'praise_1', text: '答对啦！宝贝你真聪明！', category: 'praise', title: '闯关答对夸奖 1', emoji: '🎉' },
   { id: 'praise_2', text: '太棒啦！给你点亮一颗大金星！', category: 'praise', title: '获得金星夸奖 2', emoji: '🌟' },
@@ -51,45 +52,76 @@ export const PRAISE_PRESETS = [
   { id: 'praise_8', text: 'High five! 我们的英语情景剧演得太默契啦！', category: 'praise', title: '英语亲子剧击掌', emoji: '🙌' }
 ]
 
+const DEFAULT_SETTINGS = {
+  // 全站主导音源模式：
+  // 'browser' -> 使用所选的浏览器内置声音
+  // 'my_timbre' -> 使用「录入我的一段话」提取/克隆的个人音色播放全站所有音频
+  // 'recorded_first' -> 优先使用逐句录制的真人配音，未录制词条使用所选音色
+  voiceEngineMode: 'browser',
+  activeRole: 'kid',
+  fallbackToOtherFamilyRole: true,
+  autoPlayPraiseOnSuccess: true,
+
+  // 浏览器内置声音选择与参数
+  selectedZhVoiceURI: '',
+  selectedEnVoiceURI: '',
+  browserRate: 0.92,
+  browserPitch: 1.05,
+
+  // 「录入我的一段话」个人声纹音色配置
+  timbreSampleText: '嗨宝贝，我是最爱你的爸爸妈妈！今天我们一起开心地学拼音、读英语、背古诗吧，你一定是最棒的！',
+  timbreProfile: {
+    hasSample: false,
+    recordedAt: '',
+    duration: 0,
+    detectedHz: 210,
+    voiceTypeLabel: '未录入样本',
+    computedPitch: 1.08,
+    computedRate: 0.92,
+    matchedZhVoiceURI: '',
+    matchedEnVoiceURI: ''
+  },
+
+  // AI 零样本高保真声音克隆配置（可选增强）
+  aiCloneEnabled: false,
+  aiProvider: 'siliconflow', // 'siliconflow' | 'custom'
+  aiApiKey: '',
+  aiModel: 'FunAudioLLM/CosyVoice2-0.5B',
+  aiCustomEndpoint: '',
+  aiVoiceUri: '',
+  aiRefText: '嗨宝贝，我是最爱你的爸爸妈妈！今天我们一起开心地学拼音、读英语、背古诗吧，你一定是最棒的！'
+}
+
 function loadSettings() {
   try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY)
+    const raw = window.localStorage.getItem(SETTINGS_KEY) || window.localStorage.getItem('kids_voice_studio_settings_v1')
     if (raw) {
+      const parsed = JSON.parse(raw)
       return {
-        activeRole: 'kid',
-        fallbackToOtherFamilyRole: true,
-        autoPlayPraiseOnSuccess: true,
-        aiCloneEnabled: false,
-        aiProvider: 'siliconflow', // 'siliconflow' | 'custom'
-        aiApiKey: '',
-        aiModel: 'FunAudioLLM/CosyVoice2-0.5B',
-        aiCustomEndpoint: '',
-        aiVoiceUri: '', // SiliconFlow 上传参考音频后返回的 uri 或预置音色
-        aiRefText: '在一无所知中，梦里的一天结束了，一个新的轮回便会开始。',
-        ...JSON.parse(raw)
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        timbreProfile: {
+          ...DEFAULT_SETTINGS.timbreProfile,
+          ...(parsed.timbreProfile || {})
+        }
       }
     }
   } catch (e) {}
-  return {
-    activeRole: 'kid',
-    fallbackToOtherFamilyRole: true,
-    autoPlayPraiseOnSuccess: true,
-    aiCloneEnabled: false,
-    aiProvider: 'siliconflow',
-    aiApiKey: '',
-    aiModel: 'FunAudioLLM/CosyVoice2-0.5B',
-    aiCustomEndpoint: '',
-    aiVoiceUri: '',
-    aiRefText: '宝贝今天表现真棒，我们一起开心地学拼音和英语吧！'
-  }
+  return { ...DEFAULT_SETTINGS }
 }
 
 const voiceSettings = ref(loadSettings())
-// Memory index of recorded clips metadata: { [dbKey]: { key, roleId, normText, label, category, duration, updatedAt } }
 const recordedClipsIndex = ref({})
 const isDbReady = ref(false)
 
-// Global state for the Floating Recorder Widget ("边学边录")
+// 浏览器内置语音列表（响应式）
+const browserVoices = ref([])
+const hasLoadedBrowserVoices = ref(false)
+
+// 用户录入的那一段话（声纹样本 Blob）
+const timbreSampleBlob = ref(null)
+
+// 右下角「边学边录」胶囊状态
 const lastSpokenText = ref('右下半圆 b b b，拉开天线听广播')
 const lastSpokenLang = ref('zh-CN')
 const lastSpokenLabel = ref('拼音认读示范')
@@ -102,6 +134,141 @@ let activeAudioEl = null
 let mediaRecorder = null
 let recordingChunks = []
 let recordingTimer = null
+let voicesListenerBound = false
+
+// 为浏览器内置声音生成对家长和小朋友友好的中文描述标签
+export function describeBrowserVoice(voice) {
+  if (!voice) return { friendlyName: '系统默认语音', tag: '标准', genderHint: 'standard' }
+  const name = voice.name || ''
+  const lang = voice.lang || ''
+
+  const knownMap = [
+    { match: 'Tingting', friendlyName: '婷婷 (Tingting)', tag: '温暖普通话女声 · 推荐', genderHint: 'female' },
+    { match: 'Ting-Ting', friendlyName: '婷婷 (Ting-Ting)', tag: '温暖普通话女声 · 推荐', genderHint: 'female' },
+    { match: 'Meijia', friendlyName: '美佳 (Meijia)', tag: '甜美台湾国语女声 · 亲切', genderHint: 'female' },
+    { match: 'Sinji', friendlyName: '善怡 (Sinji)', tag: '标准粤语女声', genderHint: 'female' },
+    { match: 'Sin-Ji', friendlyName: '善怡 (Sin-Ji)', tag: '标准粤语女声', genderHint: 'female' },
+    { match: 'Xiaoxiao', friendlyName: '微软晓晓 (Xiaoxiao)', tag: '超自然少儿绘本女声 · 强烈推荐', genderHint: 'female' },
+    { match: 'Xiaoyi', friendlyName: '微软晓伊 (Xiaoyi)', tag: '活泼卡通童声女声 · 推荐', genderHint: 'kid' },
+    { match: 'Yunxi', friendlyName: '微软云希 (Yunxi)', tag: '阳光清朗大哥哥声', genderHint: 'male' },
+    { match: 'Yunjian', friendlyName: '微软云健 (Yunjian)', tag: '沉稳浑厚男声', genderHint: 'male' },
+    { match: 'Yunyang', friendlyName: '微软云扬 (Yunyang)', tag: '新闻播音男声', genderHint: 'male' },
+    { match: 'Xiaobei', friendlyName: '微软晓北 (Xiaobei)', tag: '趣味东北话女声', genderHint: 'female' },
+    { match: 'HsiaoChen', friendlyName: '晓臻 (HsiaoChen)', tag: '温柔台湾女声', genderHint: 'female' },
+    { match: 'WanLung', friendlyName: '云龙 (WanLung)', tag: '粤语男声', genderHint: 'male' },
+    { match: 'Lili', friendlyName: '莉莉 (Lili)', tag: '清脆普通话女声', genderHint: 'female' },
+    { match: 'Huihui', friendlyName: '慧慧 (Huihui)', tag: '标准普通话女声', genderHint: 'female' },
+    { match: 'Kangkang', friendlyName: '康康 (Kangkang)', tag: '标准普通话男声', genderHint: 'male' },
+    { match: 'Yaoyao', friendlyName: '瑶瑶 (Yaoyao)', tag: '甜美普通话女声', genderHint: 'female' },
+    { match: 'Samantha', friendlyName: '莎曼珊 (Samantha)', tag: '纯正美式英语女声 · 推荐', genderHint: 'female' },
+    { match: 'Ava', friendlyName: '艾娃 (Ava)', tag: '自然美式英语女声 · 推荐', genderHint: 'female' },
+    { match: 'Allison', friendlyName: '艾莉森 (Allison)', tag: '清晰美式外教女声', genderHint: 'female' },
+    { match: 'Victoria', friendlyName: '维多利亚 (Victoria)', tag: '温柔美式女声', genderHint: 'female' },
+    { match: 'Alex', friendlyName: '亚历克斯 (Alex)', tag: '磁性美式英语男声', genderHint: 'male' },
+    { match: 'Daniel', friendlyName: '丹尼尔 (Daniel)', tag: '纯正英伦绅士男声', genderHint: 'male' },
+    { match: 'Karen', friendlyName: '凯伦 (Karen)', tag: '自然澳洲英语女声', genderHint: 'female' },
+    { match: 'Moira', friendlyName: '莫伊拉 (Moira)', tag: '温和爱尔兰英语女声', genderHint: 'female' },
+    { match: 'Jenny', friendlyName: '微软珍妮 (Jenny)', tag: '亲切美式少儿外教', genderHint: 'female' },
+    { match: 'Aria', friendlyName: '微软艾莉亚 (Aria)', tag: '绘本故事美式女声', genderHint: 'female' },
+    { match: 'Guy', friendlyName: '微软盖伊 (Guy)', tag: '活力美式男声', genderHint: 'male' },
+    { match: 'Eddy', friendlyName: '艾迪 (Eddy)', tag: '轻快男声', genderHint: 'male' },
+    { match: 'Flo', friendlyName: '芙洛 (Flo)', tag: '温和女声', genderHint: 'female' },
+    { match: 'Grandma', friendlyName: '慈祥奶奶 (Grandma)', tag: '故事老奶奶特色音', genderHint: 'female' },
+    { match: 'Grandpa', friendlyName: '慈祥爷爷 (Grandpa)', tag: '故事老爷爷特色音', genderHint: 'male' },
+    { match: 'Reed', friendlyName: '里德 (Reed)', tag: '沉稳男声', genderHint: 'male' },
+    { match: 'Rocko', friendlyName: '洛克 (Rocko)', tag: '浑厚男声', genderHint: 'male' },
+    { match: 'Sandy', friendlyName: '珊迪 (Sandy)', tag: '清脆活泼少年音', genderHint: 'kid' },
+    { match: 'Shelley', friendlyName: '雪莉 (Shelley)', tag: '柔和女声', genderHint: 'female' },
+    { match: 'Google 普通话', friendlyName: 'Google 标准普通话', tag: '云端清晰普通话', genderHint: 'female' },
+    { match: 'Google 國語', friendlyName: 'Google 台湾国语', tag: '云端台湾腔女声', genderHint: 'female' },
+    { match: 'Google 粤語', friendlyName: 'Google 粤语发音', tag: '云端粤语发音', genderHint: 'female' },
+    { match: 'Google US English', friendlyName: 'Google 美式英语', tag: '云端标准美音', genderHint: 'female' },
+    { match: 'Google UK English Female', friendlyName: 'Google 英式女声', tag: '云端标准英音女声', genderHint: 'female' },
+    { match: 'Google UK English Male', friendlyName: 'Google 英式男声', tag: '云端标准英音男声', genderHint: 'male' }
+  ]
+
+  for (const item of knownMap) {
+    if (name.toLowerCase().includes(item.match.toLowerCase())) {
+      return {
+        friendlyName: `${item.friendlyName}`,
+        tag: item.tag,
+        genderHint: item.genderHint
+      }
+    }
+  }
+
+  let langLabel = lang
+  if (lang.includes('zh-CN') || lang.includes('cmn-Hans')) langLabel = '普通话 (中国大陆)'
+  else if (lang.includes('zh-TW') || lang.includes('cmn-Hant')) langLabel = '国语 (中国台湾)'
+  else if (lang.includes('zh-HK') || lang.includes('yue')) langLabel = '粤语 (中国香港)'
+  else if (lang.includes('en-US')) langLabel = '美式英语 (US)'
+  else if (lang.includes('en-GB')) langLabel = '英式英语 (UK)'
+  else if (lang.includes('en-AU')) langLabel = '澳式英语 (AU)'
+
+  return {
+    friendlyName: name,
+    tag: `${langLabel} · ${voice.localService ? '本地内置' : '云端发音'}`,
+    genderHint: 'standard'
+  }
+}
+
+export function refreshBrowserVoices() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return []
+  const rawList = window.speechSynthesis.getVoices() || []
+  if (rawList.length > 0) {
+    const mapped = rawList.map(v => {
+      const desc = describeBrowserVoice(v)
+      return {
+        voiceURI: v.voiceURI || v.name,
+        name: v.name,
+        lang: v.lang || '',
+        localService: !!v.localService,
+        default: !!v.default,
+        friendlyName: desc.friendlyName,
+        tag: desc.tag,
+        genderHint: desc.genderHint,
+        rawVoice: v
+      }
+    })
+    browserVoices.value = mapped
+    hasLoadedBrowserVoices.value = true
+
+    // 如果尚未设置默认中/英文语音，自动挑选最优的默认项
+    if (!voiceSettings.value.selectedZhVoiceURI) {
+      const bestZh =
+        mapped.find(v => v.lang.includes('zh-CN') && (v.name.includes('Xiaoxiao') || v.name.includes('Ting') || v.name.includes('Meijia'))) ||
+        mapped.find(v => v.lang.includes('zh-CN')) ||
+        mapped.find(v => v.lang.toLowerCase().includes('zh'))
+      if (bestZh) {
+        voiceSettings.value.selectedZhVoiceURI = bestZh.voiceURI
+      }
+    }
+    if (!voiceSettings.value.selectedEnVoiceURI) {
+      const bestEn =
+        mapped.find(v => v.lang.includes('en-US') && (v.name.includes('Samantha') || v.name.includes('Ava') || v.name.includes('Jenny') || v.name.includes('Google'))) ||
+        mapped.find(v => v.lang.startsWith('en-US')) ||
+        mapped.find(v => v.lang.startsWith('en'))
+      if (bestEn) {
+        voiceSettings.value.selectedEnVoiceURI = bestEn.voiceURI
+      }
+    }
+  }
+  return browserVoices.value
+}
+
+function initBrowserVoicesListener() {
+  if (voicesListenerBound || typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  voicesListenerBound = true
+  refreshBrowserVoices()
+  if ('onvoiceschanged' in window.speechSynthesis) {
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      refreshBrowserVoices()
+    })
+  }
+  // 兼容部分移动端浏览器延迟返回 voices
+  setTimeout(refreshBrowserVoices, 300)
+  setTimeout(refreshBrowserVoices, 1000)
+}
 
 export function normalizeVoiceText(text) {
   if (!text) return ''
@@ -148,6 +315,10 @@ async function refreshClipsIndex() {
         const list = req.result || []
         const map = {}
         list.forEach(item => {
+          if (item.key === TIMBRE_SAMPLE_KEY) {
+            timbreSampleBlob.value = item.blob || null
+            return
+          }
           map[item.key] = {
             key: item.key,
             roleId: item.roleId,
@@ -175,6 +346,129 @@ async function refreshClipsIndex() {
   }
 }
 
+// 利用 Web Audio API 分析用户录入的一段话，提取真实声纹特征（基频 Hz、音调映射、语速特征）
+async function analyzeAudioBlobTimbre(blob, durationSec = 5) {
+  let detectedHz = 210
+  let activeRatio = 0.65
+
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (AudioContextClass) {
+      const ctx = new AudioContextClass()
+      const arrayBuf = await blob.arrayBuffer()
+      const audioBuf = await ctx.decodeAudioData(arrayBuf)
+      const channelData = audioBuf.getChannelData(0)
+      const sampleRate = audioBuf.sampleRate
+
+      const frameSize = 2048
+      const hopSize = 1024
+      const pitches = []
+      let activeFrames = 0
+      let totalFrames = 0
+
+      // 在人声基频范围 (75Hz ~ 380Hz) 内通过时域自相关提取基频 F0
+      const minLag = Math.floor(sampleRate / 380)
+      const maxLag = Math.floor(sampleRate / 75)
+
+      for (let start = 0; start + frameSize < channelData.length; start += hopSize) {
+        totalFrames++
+        let rms = 0
+        for (let i = 0; i < frameSize; i++) {
+          const v = channelData[start + i]
+          rms += v * v
+        }
+        rms = Math.sqrt(rms / frameSize)
+        if (rms < 0.018) continue
+        activeFrames++
+
+        // 只取最多 60 个高能量语音帧做自相关计算，保证瞬间完成
+        if (pitches.length < 60) {
+          let bestLag = -1
+          let bestCorr = 0
+          for (let lag = minLag; lag <= maxLag; lag += 2) {
+            let corr = 0
+            for (let i = 0; i < frameSize - lag; i += 2) {
+              corr += channelData[start + i] * channelData[start + i + lag]
+            }
+            if (corr > bestCorr) {
+              bestCorr = corr
+              bestLag = lag
+            }
+          }
+          if (bestLag > 0) {
+            const freq = sampleRate / bestLag
+            if (freq >= 75 && freq <= 380) {
+              pitches.push(freq)
+            }
+          }
+        }
+      }
+
+      if (totalFrames > 0) {
+        activeRatio = activeFrames / totalFrames
+      }
+      if (pitches.length > 0) {
+        pitches.sort((a, b) => a - b)
+        detectedHz = Math.round(pitches[Math.floor(pitches.length / 2)])
+      }
+      try {
+        ctx.close()
+      } catch (e) {}
+    }
+  } catch (e) {
+    // 若浏览器不支持解码特定容器格式，采用温和默认声纹
+  }
+
+  // 根据检测到的基频 Hz 判定声线类型并映射 TTS 音色参数
+  let voiceTypeLabel = '温柔亲切女声'
+  let computedPitch = 1.08
+  let targetGender = 'female'
+
+  if (detectedHz < 155) {
+    voiceTypeLabel = '温暖磁性男声（爸爸声线）'
+    // 100Hz ~ 155Hz -> pitch 0.72 ~ 0.90
+    computedPitch = Number((0.72 + ((detectedHz - 95) / 60) * 0.18).toFixed(2))
+    computedPitch = Math.max(0.68, Math.min(0.92, computedPitch))
+    targetGender = 'male'
+  } else if (detectedHz <= 245) {
+    voiceTypeLabel = '温柔甜美女声（妈妈声线）'
+    // 155Hz ~ 245Hz -> pitch 0.98 ~ 1.18
+    computedPitch = Number((0.98 + ((detectedHz - 155) / 90) * 0.2).toFixed(2))
+    computedPitch = Math.max(0.95, Math.min(1.22, computedPitch))
+    targetGender = 'female'
+  } else {
+    voiceTypeLabel = '清脆元气童声（宝贝声线）'
+    // 245Hz+ -> pitch 1.24 ~ 1.42
+    computedPitch = Number((1.24 + ((detectedHz - 245) / 110) * 0.18).toFixed(2))
+    computedPitch = Math.max(1.22, Math.min(1.45, computedPitch))
+    targetGender = 'kid'
+  }
+
+  // 根据发音饱满度映射语速
+  let computedRate = Number((0.84 + activeRatio * 0.18).toFixed(2))
+  computedRate = Math.max(0.8, Math.min(1.08, computedRate))
+
+  // 从当前浏览器可用语音中匹配最契合该声纹基底的中英文发音人
+  const voices = refreshBrowserVoices()
+  const zhList = voices.filter(v => v.lang.toLowerCase().includes('zh') || v.lang.toLowerCase().includes('cmn'))
+  const enList = voices.filter(v => v.lang.toLowerCase().startsWith('en'))
+
+  let matchedZh = zhList.find(v => v.genderHint === targetGender) || zhList[0]
+  let matchedEn = enList.find(v => v.genderHint === targetGender) || enList[0]
+
+  return {
+    hasSample: true,
+    recordedAt: new Date().toLocaleString('zh-CN', { hour12: false }),
+    duration: durationSec,
+    detectedHz,
+    voiceTypeLabel,
+    computedPitch,
+    computedRate,
+    matchedZhVoiceURI: matchedZh ? matchedZh.voiceURI : voiceSettings.value.selectedZhVoiceURI,
+    matchedEnVoiceURI: matchedEn ? matchedEn.voiceURI : voiceSettings.value.selectedEnVoiceURI
+  }
+}
+
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -190,6 +484,7 @@ async function base64ToBlob(dataUrl) {
 }
 
 export function useVoiceStudio() {
+  initBrowserVoicesListener()
   if (!isDbReady.value && typeof window !== 'undefined') {
     refreshClipsIndex()
   }
@@ -203,6 +498,59 @@ export function useVoiceStudio() {
       window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(voiceSettings.value))
     } catch (e) {}
   }
+
+  // 分类后的浏览器中文声音列表
+  const zhBrowserVoices = computed(() => {
+    const list = browserVoices.value.filter(
+      v =>
+        v.lang.toLowerCase().includes('zh') ||
+        v.lang.toLowerCase().includes('cmn') ||
+        v.lang.toLowerCase().includes('yue') ||
+        /chinese|普通话|国语|國語|粤语|粵語|ting|meijia|xiaoxiao|yunxi|huihui|kangkang/i.test(v.name)
+    )
+    return list.length > 0 ? list : browserVoices.value
+  })
+
+  // 分类后的浏览器英文声音列表
+  const enBrowserVoices = computed(() => {
+    const list = browserVoices.value.filter(
+      v => v.lang.toLowerCase().startsWith('en') || /english|samantha|ava|daniel|karen|alex|victoria|jenny/i.test(v.name)
+    )
+    return list.length > 0 ? list : browserVoices.value
+  })
+
+  const selectedZhVoiceObj = computed(() => {
+    const uri = voiceSettings.value.selectedZhVoiceURI
+    return (
+      zhBrowserVoices.value.find(v => v.voiceURI === uri || v.name === uri) ||
+      zhBrowserVoices.value[0] ||
+      null
+    )
+  })
+
+  const selectedEnVoiceObj = computed(() => {
+    const uri = voiceSettings.value.selectedEnVoiceURI
+    return (
+      enBrowserVoices.value.find(v => v.voiceURI === uri || v.name === uri) ||
+      enBrowserVoices.value[0] ||
+      null
+    )
+  })
+
+  const activeVoiceSummaryLabel = computed(() => {
+    const mode = voiceSettings.value.voiceEngineMode
+    if (mode === 'my_timbre') {
+      if (voiceSettings.value.aiCloneEnabled && voiceSettings.value.aiApiKey) {
+        return '✨ 我的录入音色 (AI高保真克隆)'
+      }
+      return `🎙️ 我的录入音色 (${voiceSettings.value.timbreProfile?.voiceTypeLabel || '声纹拟真'})`
+    }
+    if (mode === 'recorded_first') {
+      const r = VOICE_ROLES.find(x => x.id === voiceSettings.value.activeRole)
+      return `${r?.icon || '🎙️'} ${r?.shortName || '真人配音'}`
+    }
+    return `🔊 ${selectedZhVoiceObj.value?.friendlyName || '浏览器内置音'}`
+  })
 
   const currentRoleObj = computed(() => {
     return VOICE_ROLES.find(r => r.id === voiceSettings.value.activeRole) || VOICE_ROLES[0]
@@ -236,6 +584,40 @@ export function useVoiceStudio() {
   function hasExactRoleRecording(roleId, text) {
     const k = buildVoiceDbKey(roleId, text)
     return !!recordedClipsIndex.value[k]
+  }
+
+  // 保存用户录入的一段话（声纹样本），自动分析音色并启用该音色播放全站音频
+  async function saveTimbreSampleAndActivate(blob, duration = 5, sampleText = '') {
+    const db = await openVoiceDB()
+    const record = {
+      key: TIMBRE_SAMPLE_KEY,
+      roleId: 'timbre_sample',
+      normText: '__timbre_sample__',
+      rawText: sampleText || voiceSettings.value.timbreSampleText,
+      label: '我录入的个人音色样本',
+      category: 'timbre_sample',
+      blob,
+      mimeType: blob.type || 'audio/webm',
+      duration,
+      updatedAt: new Date().toISOString()
+    }
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      const store = tx.objectStore(STORE_NAME)
+      const req = store.put(record)
+      req.onsuccess = () => resolve()
+      req.onerror = (e) => reject(e.target.error)
+    })
+    timbreSampleBlob.value = blob
+
+    const profile = await analyzeAudioBlobTimbre(blob, duration)
+    saveVoiceSettings({
+      voiceEngineMode: 'my_timbre',
+      timbreSampleText: sampleText || voiceSettings.value.timbreSampleText,
+      aiRefText: sampleText || voiceSettings.value.timbreSampleText,
+      timbreProfile: profile
+    })
+    return profile
   }
 
   async function saveVoiceClip({ roleId, text, label = '', category = 'general', blob, duration = 0 }) {
@@ -334,6 +716,7 @@ export function useVoiceStudio() {
   }
 
   async function playBlobAudio(blob, onEnd = null) {
+    if (!blob) return false
     stopCustomAudio()
     return new Promise((resolve) => {
       const url = URL.createObjectURL(blob)
@@ -362,7 +745,7 @@ export function useVoiceStudio() {
     })
   }
 
-  // AI Zero-shot Voice Cloning Synthesis via SiliconFlow (CosyVoice2) or Custom OpenAI-compatible TTS
+  // AI 零样本声音克隆合成 (SiliconFlow CosyVoice2 或自定义接口)
   async function synthesizeWithAiClone(text) {
     const cfg = voiceSettings.value
     if (!cfg.aiCloneEnabled || !cfg.aiApiKey) return null
@@ -393,11 +776,10 @@ export function useVoiceStudio() {
       if (!res.ok) return null
       const blob = await res.blob()
       if (blob && blob.size > 200) {
-        // Cache into IndexedDB so next time it plays instantaneously for free!
         await saveVoiceClip({
           roleId: cfg.activeRole === 'system' ? 'mom' : cfg.activeRole,
           text,
-          label: `[AI克隆] ${text.slice(0, 24)}`,
+          label: `[克隆音色] ${text.slice(0, 24)}`,
           category: 'ai_cache',
           blob
         })
@@ -407,18 +789,21 @@ export function useVoiceStudio() {
     return null
   }
 
-  // Upload 10-second reference audio to SiliconFlow to create a zero-shot cloned voice URI
   async function uploadReferenceVoiceToSiliconFlow(audioBlob, customName = 'my-family-voice') {
     const cfg = voiceSettings.value
     if (!cfg.aiApiKey) {
       throw new Error('请先填写硅基流动 (SiliconFlow) API Key')
     }
+    const targetBlob = audioBlob || timbreSampleBlob.value
+    if (!targetBlob) {
+      throw new Error('请先录入您的一段话作为声音样本')
+    }
     const formData = new FormData()
-    const ext = audioBlob.type.includes('mp4') ? 'mp4' : audioBlob.type.includes('wav') ? 'wav' : 'webm'
-    formData.append('file', audioBlob, `reference.${ext}`)
+    const ext = targetBlob.type.includes('mp4') ? 'mp4' : targetBlob.type.includes('wav') ? 'wav' : 'webm'
+    formData.append('file', targetBlob, `reference.${ext}`)
     formData.append('model', cfg.aiModel || 'FunAudioLLM/CosyVoice2-0.5B')
     formData.append('customName', customName)
-    formData.append('text', cfg.aiRefText || '宝贝今天表现真棒，我们一起开心地学拼音和英语吧！')
+    formData.append('text', cfg.timbreSampleText || cfg.aiRefText || '嗨宝贝，我是最爱你的爸爸妈妈！今天我们一起开心地学拼音、读英语、背古诗吧！')
 
     const res = await fetch('https://api.siliconflow.cn/v1/uploads/audio/voice', {
       method: 'POST',
@@ -432,13 +817,13 @@ export function useVoiceStudio() {
       throw new Error(data?.message || data?.error?.message || '上传声纹样本失败，请检查 API Key 或音频格式')
     }
     saveVoiceSettings({
+      voiceEngineMode: 'my_timbre',
       aiVoiceUri: data.uri,
       aiCloneEnabled: true
     })
     return data.uri
   }
 
-  // Microphone Recording Helpers
   async function startRecording() {
     if (isRecordingGlobal.value) return
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -498,7 +883,6 @@ export function useVoiceStudio() {
     })
   }
 
-  // Export & Import all custom voices as JSON backup
   async function exportAllVoicesBackup() {
     const db = await openVoiceDB()
     const allRecords = await new Promise((resolve) => {
@@ -526,8 +910,9 @@ export function useVoiceStudio() {
       }
     }
     return JSON.stringify({
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
+      settings: voiceSettings.value,
       count: serialized.length,
       items: serialized
     })
@@ -538,18 +923,25 @@ export function useVoiceStudio() {
     if (!parsed || !Array.isArray(parsed.items)) {
       throw new Error('备份文件格式不正确')
     }
+    if (parsed.settings) {
+      saveVoiceSettings(parsed.settings)
+    }
     let importedCount = 0
     for (const item of parsed.items) {
       if (item.dataUrl && item.rawText) {
         const blob = await base64ToBlob(item.dataUrl)
-        await saveVoiceClip({
-          roleId: item.roleId || 'kid',
-          text: item.rawText,
-          label: item.label || item.rawText,
-          category: item.category || 'general',
-          blob,
-          duration: item.duration || 1
-        })
+        if (item.key === TIMBRE_SAMPLE_KEY) {
+          await saveTimbreSampleAndActivate(blob, item.duration || 5, item.rawText)
+        } else {
+          await saveVoiceClip({
+            roleId: item.roleId || 'kid',
+            text: item.rawText,
+            label: item.label || item.rawText,
+            category: item.category || 'general',
+            blob,
+            duration: item.duration || 1
+          })
+        }
         importedCount++
       }
     }
@@ -559,6 +951,14 @@ export function useVoiceStudio() {
 
   return {
     voiceSettings,
+    browserVoices,
+    zhBrowserVoices,
+    enBrowserVoices,
+    selectedZhVoiceObj,
+    selectedEnVoiceObj,
+    activeVoiceSummaryLabel,
+    hasLoadedBrowserVoices,
+    timbreSampleBlob,
     recordedClipsIndex,
     currentRoleObj,
     totalRecordedCount,
@@ -569,7 +969,9 @@ export function useVoiceStudio() {
     isRecordingGlobal,
     recordingSeconds,
     isPlayingCustomAudio,
+    refreshBrowserVoices,
     saveVoiceSettings,
+    saveTimbreSampleAndActivate,
     refreshClipsIndex,
     hasRecordingFor,
     hasExactRoleRecording,

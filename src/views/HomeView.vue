@@ -38,8 +38,8 @@
             <button type="button" class="hero-btn primary-math" @click="goTo('/big99')">
               🎠 大九九乐园
             </button>
-            <button type="button" class="hero-btn voice-studio-btn" @click="goTo('/voice-studio')">
-              🎙️ 用自己的声音学
+            <button type="button" class="hero-btn voice-studio-btn" @click="goTo('/voice-settings')">
+              ⚙️ 声音与音色设置
             </button>
             <button type="button" class="hero-btn outline-btn" @click="showProfileModal = true; playClickSound()">
               ✍️ {{ kidProfile?.signatureDataUrl ? '更新手写签名' : '手写签名报到' }}
