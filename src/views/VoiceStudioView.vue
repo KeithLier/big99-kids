@@ -490,9 +490,9 @@ const currentCategoryItems = computed(() => {
     return ALL_PINYIN_ITEMS.map(item => ({
       key: item.id,
       title: `拼音「${item.code}」(${item.word})`,
-      sub: item.subGroup,
+      sub: `${item.subGroup} · ${item.chant}`,
       emoji: item.emoji,
-      speakText: `${item.readSound}，${item.chant}`,
+      speakText: `${item.readSound}，${item.chantSpeak || item.chant}`,
       lang: 'zh-CN'
     }))
   }
