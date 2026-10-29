@@ -582,15 +582,10 @@ onMounted(() => {
   }
 
   function closeNamePadModal() {
-    if (!kidProfile) {
-      const fb = document.getElementById('namePadFeedback');
-      if (fb) {
-        fb.style.color = '#d32f2f';
-        fb.textContent = '💡 请先在画板上写下你的名字（或输入小名）再开始闯关哦！';
-      }
-      return;
+    const modal = document.getElementById('namePadModal');
+    if (modal) {
+      modal.classList.remove('open');
     }
-    document.getElementById('namePadModal').classList.remove('open');
   }
 
   function saveKidProfile() {
@@ -789,8 +784,7 @@ onMounted(() => {
     closeResetConfirmModal();
     updateKidProfileUI();
     renderGrid();
-    showToast('🧹 已清除全部历史记录与手写签名，请重新签名报到！');
-    openNamePadModal();
+    showToast('🧹 已清除全部历史记录，如需签名可点击右上角小主人名片！');
   }
 
   // ==================== iPad RESPONSIVE AUTO-FIT SCALER ====================
@@ -2453,9 +2447,6 @@ onMounted(() => {
   updateKidProfileUI();
   evaluateAchievements();
   renderGrid();
-  if (!kidProfile) {
-    setTimeout(() => openNamePadModal(), 180);
-  }
   window.addEventListener("storage", onGlobalProfileUpdate);
   window.addEventListener("kid-profile-updated", onGlobalProfileUpdate);
   cleanupResize = () => {
