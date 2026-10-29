@@ -383,16 +383,53 @@ onMounted(() => {
   opacity: 1;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
   .global-navbar {
-    padding: 8px 14px;
+    padding: 8px 16px;
+  }
+  .nav-inner {
+    gap: 10px;
+  }
+  .nav-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100%;
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-pill {
+    flex-shrink: 0;
+    padding: 7px 13px;
+    font-size: 13.5px;
+    white-space: nowrap;
   }
   .brand-sub {
     display: none;
   }
+}
+
+@media (max-width: 768px) {
+  .global-navbar {
+    padding: 6px 12px;
+  }
+  .brand-title {
+    font-size: 15px;
+  }
   .nav-pill {
-    padding: 6px 10px;
+    padding: 6px 11px;
     font-size: 12.5px;
+  }
+  .kid-name {
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 </style>

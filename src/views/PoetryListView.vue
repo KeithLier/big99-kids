@@ -772,10 +772,31 @@ function goRandomPoem() {
   transform: scale(1.1);
 }
 
+/* iPad & Tablet Responsive Adaptations */
+@media (min-width: 1024px) and (max-width: 1200px) {
+  .poems-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (min-width: 680px) and (max-width: 1023px) {
+  .poems-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
 @media (max-width: 900px) {
   .stage-and-random-group {
     align-items: flex-start;
     width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .poems-grid {
+    grid-template-columns: 1fr;
   }
 }
 

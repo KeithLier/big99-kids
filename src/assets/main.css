@@ -86,6 +86,21 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* iPad Safari Viewport & Touch Optimization */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* iPad Touch Target & Gesture Safe Rules */
+button, a, input, select, textarea, .clickable-chip {
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  /* On touch devices like iPad, ensure touch targets are comfortable (Apple HIG ≥ 44pt) */
+  button, a {
+    min-height: 38px;
+  }
 }
 
 button, input, select, textarea {

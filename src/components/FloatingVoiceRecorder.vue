@@ -246,8 +246,8 @@ function goToStudio() {
 <style scoped>
 .floating-voice-pod {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   z-index: 2500;
 }
 

@@ -2129,17 +2129,40 @@ onMounted(() => {
   cursor: pointer;
 }
 
+/* iPad & Tablet Responsive Adaptations (768px ~ 1180px) */
+@media (max-width: 1180px) {
+  .scene-selector-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
 @media (max-width: 960px) {
-  .mode-tabs,
-  .scene-selector-grid,
-  .pairs-board {
-    grid-template-columns: 1fr;
+  .mode-tabs {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .scene-selector-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   .letter-spotlight {
     grid-template-columns: 1fr;
   }
+  .pairs-board {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
   .options-bubble-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile Phone Responsive Adaptations */
+@media (max-width: 680px) {
+  .mode-tabs,
+  .scene-selector-grid,
+  .pairs-board {
+    grid-template-columns: 1fr;
   }
   .dialogue-bubble {
     max-width: 100%;

@@ -1746,7 +1746,25 @@ onBeforeUnmount(() => {
 .victory-btn.next-poem { background: #ff6d00; color: #fff; }
 .victory-btn.back-list { background: #1f9d4c; color: #fff; }
 
-@media (max-width: 860px) {
+/* iPad & Tablet Responsive Adaptations (768px ~ 1024px) */
+@media (min-width: 681px) and (max-width: 1024px) {
+  .analysis-grid,
+  .translation-keywords-card,
+  .couplet-arena {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .quiz-options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .line-chars {
+    font-size: 24px;
+  }
+}
+
+/* Mobile Phone Responsive Adaptations */
+@media (max-width: 680px) {
   .module-Mode-tabs,
   .analysis-grid,
   .translation-keywords-card,
@@ -1755,7 +1773,7 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
   .line-chars {
-    font-size: 21px;
+    font-size: 20px;
   }
 }
 </style>

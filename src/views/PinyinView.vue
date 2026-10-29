@@ -2684,20 +2684,45 @@ onMounted(() => {
   cursor: pointer;
 }
 
-@media (max-width: 1024px) {
+/* iPad & Tablet Responsive Adaptations (768px ~ 1180px) */
+@media (min-width: 1024px) and (max-width: 1180px) {
+  .cards-split-workspace {
+    grid-template-columns: 410px 1fr;
+    gap: 16px;
+  }
+  .learning-stage-wrapper {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+@media (max-width: 1023px) {
   .cards-split-workspace {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .learning-stage-wrapper {
     position: static;
   }
+  .mode-tabs {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .train-stage-box {
+    grid-template-columns: 1fr;
+  }
+  .tone-control-buttons {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tones-mini-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 768px) {
   .mode-tabs {
     grid-template-columns: repeat(2, 1fr);
   }
-  .train-stage-box,
   .tip-and-word-row {
     grid-template-columns: 1fr;
   }

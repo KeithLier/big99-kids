@@ -1190,17 +1190,40 @@ onMounted(() => {
   color: #059669;
 }
 
-@media (max-width: 960px) {
-  .hero-banner,
-  .feature-cards-grid,
-  .bottom-grid-section {
-    grid-template-columns: 1fr;
+/* iPad & Tablet Responsive Adaptations (768px ~ 1080px) */
+@media (max-width: 1080px) {
+  .hero-banner {
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+    padding: 22px 24px;
+  }
+  .feature-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .stickers-grid {
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 820px) {
   .hero-banner {
+    grid-template-columns: 1fr;
+    gap: 20px;
     padding: 20px;
+  }
+  .bottom-grid-section {
+    grid-template-columns: 1fr;
+  }
+  .stickers-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Mobile Phone Responsive Adaptations */
+@media (max-width: 640px) {
+  .feature-cards-grid {
+    grid-template-columns: 1fr;
   }
   .hero-title {
     font-size: 24px;

@@ -805,19 +805,20 @@ onMounted(() => {
     frame.style.transform = 'none';
 
     const availW = window.innerWidth - 16;
-    const baseW = 1320;
+    const baseW = kidXiao99Only ? 980 : 1320;
     const naturalH = frame.scrollHeight || frame.offsetHeight || 860;
     const isLandscape = window.innerWidth > window.innerHeight;
     const availH = window.innerHeight - 16;
 
     let scale = availW < baseW ? (availW / baseW) : 1;
     if (isLandscape && availH < naturalH * scale) {
-      scale = Math.max(0.58, availH / naturalH);
+      scale = Math.max(0.62, availH / naturalH);
     }
-    scale = Math.max(0.52, Math.min(1, scale));
+    scale = Math.max(0.56, Math.min(1.05, scale));
 
     frame.style.transform = `scale(${scale})`;
-    scaler.style.height = Math.ceil(naturalH * scale + 6) + 'px';
+    frame.style.transformOrigin = 'top center';
+    scaler.style.height = Math.ceil(naturalH * scale + 8) + 'px';
   }
 
   function toggleZoomMode() {

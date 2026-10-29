@@ -2457,7 +2457,24 @@ onMounted(() => {
   gap: 8px;
 }
 
-@media (max-width: 900px) {
+/* iPad & Tablet Responsive Adaptations (768px ~ 1080px) */
+@media (min-width: 768px) and (max-width: 1080px) {
+  .preview-inputs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .timbre-main-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .modes-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Mobile Phone Responsive Adaptations */
+@media (max-width: 767px) {
   .modes-grid,
   .preview-inputs-grid,
   .timbre-main-grid,
