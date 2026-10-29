@@ -1,151 +1,118 @@
 <template>
   <div class="poetry-list-page">
     <div class="list-container">
-      <!-- Top Hero Banner -->
-      <section class="poetry-hero">
-        <div class="hero-content">
-          <div class="hero-tag">📜 教育部统编版 · 小学 / 初中 / 高中分级精编</div>
-          <h1>中华古诗词趣味画卷</h1>
-          <p>
-            每一首古诗词都是一幅会说话的画！点击卡片进入专属意境空间，跟着语音大声朗读、探索诗词背后的历史故事，还能玩<strong>点字成诗、飞花接龙、捉虫侦探与闯关问答</strong>赢取智慧星章！
-          </p>
-        </div>
-
-        <div class="hero-stats-box">
-          <div class="stat-pill">
-            <span class="stat-icon">📚</span>
-            <div>
-              <div class="stat-val">{{ filteredPoems.length }} <small>/ {{ allPoems.length }} 首</small></div>
-              <div class="stat-lbl">当前展示诗词</div>
+      <!-- Unified Compact Header + Stage Switcher + Filter Bar -->
+      <section class="poetry-command-card">
+        <div class="poetry-top-row">
+          <div class="hero-content">
+            <div class="hero-tag-row">
+              <span class="hero-tag">📜 教育部统编版 · 小初高分级精编</span>
+              <span class="stats-inline-pill">
+                📚 当前展示 <strong>{{ filteredPoems.length }}</strong> / {{ allPoems.length }} 首
+              </span>
+              <span class="stats-inline-pill gold">
+                🏆 已学 <strong>{{ poetryLearnedCount }}</strong> 首 · 累计 <strong>{{ totalPoetryStars }} ⭐</strong>
+              </span>
             </div>
+            <h1>中华古诗词趣味画卷</h1>
+            <p>
+              一诗一画风，支持配乐感跟读、遮字盲背、创作背景解析与<strong>点字成诗、飞花令接龙、捉虫侦探、闯关问答</strong>四大互动游戏！
+            </p>
           </div>
-          <div class="stat-pill">
-            <span class="stat-icon">🏆</span>
-            <div>
-              <div class="stat-val">{{ poetryLearnedCount }} <small>首已学</small></div>
-              <div class="stat-lbl">累计获得 {{ totalPoetryStars }} ⭐</div>
-            </div>
-          </div>
-          <button type="button" class="random-challenge-btn" @click="goRandomPoem">
-            🎲 随机抽一首闯关
-          </button>
-        </div>
-      </section>
 
-      <!-- Stage Tabs (全部 / 小学 / 初中 / 高中) -->
-      <section class="stage-tabs-bar">
-        <button
-          v-for="st in stageCategories"
-          :key="st.id"
-          type="button"
-          class="stage-tab-card"
-          :class="{ active: activeStage === st.id }"
-          @click="selectStage(st.id)"
-        >
-          <div class="stage-tab-top">
-            <span class="stage-tab-title">{{ st.label }}</span>
-            <span class="stage-count-badge">{{ getStageCount(st.id) }}首</span>
-          </div>
-          <div class="stage-tab-sub">{{ st.sub }}</div>
-        </button>
-      </section>
-
-      <!-- Sub-filters: Grade, Dynasty, Theme, Status & Search -->
-      <section class="filter-controls-card">
-        <!-- Grade filter when a specific stage or all is selected -->
-        <div class="filter-row" v-if="availableGrades.length > 1">
-          <span class="filter-label">🎓 年级细分：</span>
-          <div class="filter-chips">
-            <button
-              type="button"
-              class="chip-btn"
-              :class="{ active: activeGrade === 'all' }"
-              @click="activeGrade = 'all'; playClickSound()"
-            >
-              全部年级
-            </button>
-            <button
-              v-for="g in availableGrades"
-              :key="g"
-              type="button"
-              class="chip-btn"
-              :class="{ active: activeGrade === g }"
-              @click="activeGrade = g; playClickSound()"
-            >
-              {{ g }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Dynasty Filter -->
-        <div class="filter-row">
-          <span class="filter-label">⏳ 朝代筛选：</span>
-          <div class="filter-chips">
-            <button
-              type="button"
-              class="chip-btn"
-              :class="{ active: activeDynasty === 'all' }"
-              @click="activeDynasty = 'all'; playClickSound()"
-            >
-              全部朝代
-            </button>
-            <button
-              v-for="dyn in availableDynasties"
-              :key="dyn"
-              type="button"
-              class="chip-btn"
-              :class="{ active: activeDynasty === dyn }"
-              @click="activeDynasty = dyn; playClickSound()"
-            >
-              {{ dyn }}代
-            </button>
-          </div>
-        </div>
-
-        <!-- Artistic Theme Filter & Search Box -->
-        <div class="filter-row bottom-filter-row">
-          <div class="theme-chips-wrap">
-            <span class="filter-label">🎨 意境画风：</span>
-            <div class="filter-chips">
+          <!-- Stage Segmented Switcher + Random Challenge -->
+          <div class="stage-and-random-group">
+            <div class="stage-segmented-bar" role="tablist" aria-label="学段筛选">
               <button
+                v-for="st in stageCategories"
+                :key="st.id"
                 type="button"
-                class="chip-btn"
-                :class="{ active: activeTheme === 'all' }"
-                @click="activeTheme = 'all'; playClickSound()"
+                class="stage-seg-btn"
+                :class="{ active: activeStage === st.id }"
+                @click="selectStage(st.id)"
               >
-                全部画风
+                <span class="stage-tab-title">{{ st.label }}</span>
+                <span class="stage-count-badge">{{ getStageCount(st.id) }}</span>
               </button>
-              <button
-                v-for="th in themeList"
-                :key="th.key"
-                type="button"
-                class="chip-btn"
-                :class="{ active: activeTheme === th.key }"
-                @click="activeTheme = th.key; playClickSound()"
-              >
+            </div>
+
+            <button type="button" class="random-challenge-btn" @click="goRandomPoem">
+              🎲 随机抽一首闯关
+            </button>
+          </div>
+        </div>
+
+        <!-- Compact Sub-filters Toolbar -->
+        <div class="compact-filters-toolbar">
+          <div class="dropdown-filters-group">
+            <!-- Grade Select -->
+            <select
+              v-if="availableGrades.length > 1"
+              v-model="activeGrade"
+              class="filter-select"
+              @change="playClickSound"
+              aria-label="年级筛选"
+            >
+              <option value="all">🎓 全部年级 ({{ availableGrades.length }})</option>
+              <option v-for="g in availableGrades" :key="g" :value="g">{{ g }}</option>
+            </select>
+
+            <!-- Dynasty Select -->
+            <select
+              v-model="activeDynasty"
+              class="filter-select"
+              @change="playClickSound"
+              aria-label="朝代筛选"
+            >
+              <option value="all">⏳ 全部朝代 ({{ availableDynasties.length }})</option>
+              <option v-for="dyn in availableDynasties" :key="dyn" :value="dyn">{{ dyn }}代</option>
+            </select>
+
+            <!-- Artistic Theme Select -->
+            <select
+              v-model="activeTheme"
+              class="filter-select"
+              @change="playClickSound"
+              aria-label="意境画风筛选"
+            >
+              <option value="all">🎨 全部意境画风 ({{ themeList.length }})</option>
+              <option v-for="th in themeList" :key="th.key" :value="th.key">
                 {{ th.icon }} {{ th.name }}
-              </button>
-            </div>
-          </div>
+              </option>
+            </select>
 
-          <div class="search-and-status">
-            <select v-model="statusFilter" class="status-select" @change="playClickSound">
+            <!-- Learning Status Select -->
+            <select
+              v-model="statusFilter"
+              class="filter-select"
+              @change="playClickSound"
+              aria-label="学习状态筛选"
+            >
               <option value="all">📊 全部学习状态</option>
               <option value="learned">⭐ 已学过</option>
               <option value="unlearned">🌱 未打卡</option>
               <option value="full">🏆 满星通关(3⭐)</option>
             </select>
 
-            <div class="search-box">
-              <span class="search-icon">🔍</span>
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="搜诗名 / 作者 / 诗句（如：李白、明月）"
-                class="search-input"
-              />
-              <button v-if="searchQuery" type="button" class="clear-btn" @click="searchQuery = ''">✕</button>
-            </div>
+            <button
+              v-if="activeStage !== 'all' || activeGrade !== 'all' || activeDynasty !== 'all' || activeTheme !== 'all' || statusFilter !== 'all' || searchQuery"
+              type="button"
+              class="clear-filters-btn"
+              @click="resetFilters"
+            >
+              🔄 重置筛选
+            </button>
+          </div>
+
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜诗名 / 作者 / 诗句（如：李白、明月）"
+              class="search-input"
+            />
+            <button v-if="searchQuery" type="button" class="clear-btn" @click="searchQuery = ''">✕</button>
           </div>
         </div>
       </section>
@@ -160,15 +127,14 @@
         </button>
       </div>
 
-      <!-- Poems Grid -->
+      <!-- Poems Grid (Immediately Visible Above the Fold) -->
       <section v-else class="poems-grid">
         <article
           v-for="poem in filteredPoems"
           :key="poem.id"
           class="poem-card"
           :style="{
-            background: getThemeMeta(poem.theme).cardBg,
-            borderColor: getThemeMeta(poem.theme).borderColor
+            borderTopColor: getThemeMeta(poem.theme).borderColor
           }"
           @click="openPoem(poem.id)"
         >
@@ -359,29 +325,36 @@ function goRandomPoem() {
 
 <style scoped>
 .poetry-list-page {
-  padding: 20px 16px 52px;
+  padding: 20px 20px 56px;
 }
 
 .list-container {
-  max-width: 1320px;
+  max-width: 1280px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Hero Banner */
-.poetry-hero {
-  background: linear-gradient(135deg, #fff8e1 0%, #fce4ec 55%, #e8eaf6 100%);
-  border: 4px solid #ff8a65;
-  border-radius: 30px;
-  padding: 24px 28px;
+/* Unified Command Card */
+.poetry-command-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #FFFBEB 100%);
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid #F59E0B;
+  border-radius: 22px;
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.poetry-top-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 24px;
+  align-items: flex-start;
+  gap: 20px;
   flex-wrap: wrap;
-  box-shadow: 0 12px 32px rgba(216, 67, 21, 0.12);
 }
 
 .hero-content {
@@ -389,273 +362,233 @@ function goRandomPoem() {
   min-width: 280px;
 }
 
-.hero-tag {
-  display: inline-block;
-  background: #d84315;
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 900;
-  padding: 4px 14px;
-  border-radius: 999px;
+.hero-tag-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 8px;
+}
+
+.hero-tag {
+  background: #D97706;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.stats-inline-pill {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.stats-inline-pill strong {
+  color: #0F172A;
+}
+
+.stats-inline-pill.gold {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #92400E;
 }
 
 .hero-content h1 {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 900;
-  color: #bf360c;
-  margin-bottom: 8px;
-}
-
-.hero-content p {
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: #4e342e;
-}
-
-.hero-stats-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.stat-pill {
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid #ffccbc;
-  border-radius: 20px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stat-icon {
-  font-size: 28px;
-}
-
-.stat-val {
-  font-size: 20px;
-  font-weight: 900;
-  color: #d84315;
-}
-
-.stat-val small {
-  font-size: 12px;
-  color: #78909c;
-}
-
-.stat-lbl {
-  font-size: 12px;
-  font-weight: 800;
-  color: #5d4037;
-}
-
-.random-challenge-btn {
-  border: none;
-  padding: 14px 20px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #ff6d00, #e64a19);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 5px 0 #bf360c, 0 8px 20px rgba(230, 74, 25, 0.3);
-  transition: transform 0.15s;
-}
-
-.random-challenge-btn:hover {
-  transform: translateY(-2px);
-}
-
-/* Stage Tabs */
-.stage-tabs-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-.stage-tab-card {
-  background: #fff;
-  border: 3px solid #e0e0e0;
-  border-radius: 22px;
-  padding: 14px 18px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-}
-
-.stage-tab-card:hover {
-  transform: translateY(-3px);
-  border-color: #ffab91;
-}
-
-.stage-tab-card.active {
-  background: linear-gradient(135deg, #ff7043, #d84315);
-  color: #fff;
-  border-color: #bf360c;
-  box-shadow: 0 8px 22px rgba(216, 67, 21, 0.28);
-}
-
-.stage-tab-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  color: #0F172A;
+  letter-spacing: -0.3px;
   margin-bottom: 4px;
 }
 
-.stage-tab-title {
-  font-size: 18px;
-  font-weight: 900;
+.hero-content p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #475569;
 }
 
-.stage-count-badge {
-  background: rgba(0, 0, 0, 0.08);
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 900;
+.hero-content p strong {
+  color: #0F172A;
 }
 
-.stage-tab-card.active .stage-count-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
-}
-
-.stage-tab-sub {
-  font-size: 12.5px;
-  font-weight: 700;
-  opacity: 0.82;
-}
-
-/* Filter Controls */
-.filter-controls-card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 2.5px solid #ffe0b2;
-  border-radius: 24px;
-  padding: 16px 20px;
+/* Stage Segmented Control & Random Challenge */
+.stage-and-random-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  align-items: flex-end;
+  gap: 10px;
 }
 
-.filter-row {
+.stage-segmented-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
+  background: #F1F5F9;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
   flex-wrap: wrap;
 }
 
-.bottom-filter-row {
-  justify-content: space-between;
-}
-
-.theme-chips-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.filter-label {
-  font-size: 13.5px;
-  font-weight: 900;
-  color: #5d4037;
-  white-space: nowrap;
-}
-
-.filter-chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.chip-btn {
-  border: 1.5px solid #e0e0e0;
-  background: #f8f9fa;
-  color: #455a64;
-  padding: 5px 13px;
-  border-radius: 999px;
+.stage-seg-btn {
+  border: none;
+  background: transparent;
+  color: #475569;
+  padding: 7px 14px;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.16s ease;
 }
 
-.chip-btn:hover {
-  background: #fff3e0;
-  border-color: #ffb74d;
+.stage-seg-btn:hover {
+  color: #0F172A;
 }
 
-.chip-btn.active {
-  background: #1f9d4c;
-  color: #fff;
-  border-color: #1b5e20;
-  box-shadow: 0 3px 8px rgba(31, 157, 76, 0.28);
+.stage-seg-btn.active {
+  background: #D97706;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
 }
 
-.search-and-status {
+.stage-count-badge {
+  background: rgba(15, 23, 42, 0.08);
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.stage-seg-btn.active .stage-count-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+.random-challenge-btn {
+  border: 1px solid #FDE68A;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: #FFFBEB;
+  color: #B45309;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.random-challenge-btn:hover {
+  background: #FEF3C7;
+  transform: translateY(-1px);
+}
+
+/* Single-Row Compact Filter Bar */
+.compact-filters-toolbar {
+  padding-top: 14px;
+  border-top: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dropdown-filters-group {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.status-select {
+.filter-select {
   padding: 8px 12px;
-  border-radius: 14px;
-  border: 2px solid #b8e6c5;
-  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #CBD5E1;
+  background: #F8FAFC;
   font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+  border-color: #F59E0B;
+  outline: none;
+  background: #FFFFFF;
+}
+
+.clear-filters-btn {
+  border: 1px solid #FECDD3;
+  background: #FFF1F2;
+  color: #BE123C;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 800;
-  color: #1b5e20;
   cursor: pointer;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 2px solid #ffb74d;
-  border-radius: 999px;
-  padding: 5px 14px;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 7px 14px;
   min-width: 260px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.search-box:focus-within {
+  background: #FFFFFF;
+  border-color: #F59E0B;
 }
 
 .search-icon {
   margin-right: 6px;
+  font-size: 13px;
 }
 
 .search-input {
   border: none;
+  background: transparent;
   outline: none;
-  font-size: 13.5px;
-  font-weight: 800;
-  color: #37474f;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
   width: 100%;
 }
 
 .clear-btn {
   border: none;
   background: none;
-  color: #90a4ae;
+  color: #94A3B8;
   cursor: pointer;
   font-weight: 900;
 }
 
 /* Empty State */
 .empty-state-box {
-  background: #fff;
-  border: 3px dashed #ffcc80;
-  border-radius: 28px;
+  background: #FFFFFF;
+  border: 1px dashed #CBD5E1;
+  border-radius: 22px;
   padding: 48px 20px;
   text-align: center;
 }
 
 .empty-emoji {
-  font-size: 56px;
+  font-size: 48px;
   margin-bottom: 10px;
 }
 
@@ -664,35 +597,37 @@ function goRandomPoem() {
   border: none;
   padding: 10px 22px;
   border-radius: 999px;
-  background: #ff7043;
-  color: #fff;
-  font-weight: 900;
+  background: #D97706;
+  color: #FFFFFF;
+  font-weight: 800;
   cursor: pointer;
 }
 
 /* Poems Grid */
 .poems-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+  gap: 16px;
 }
 
 .poem-card {
-  border-radius: 24px;
-  border: 3px solid #b2dfdb;
+  background: #FFFFFF;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  border-top-width: 4px;
   padding: 18px 20px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .poem-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.13);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .poem-card-top {
@@ -709,30 +644,30 @@ function goRandomPoem() {
 }
 
 .stage-badge {
-  padding: 3px 10px;
+  padding: 2px 9px;
   border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 900;
-  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FFFFFF;
 }
-.stage-小学 { background: #2e7d32; }
-.stage-初中 { background: #1565c0; }
-.stage-高中 { background: #6a1b9a; }
+.stage-小学 { background: #059669; }
+.stage-初中 { background: #0284C7; }
+.stage-高中 { background: #7C3AED; }
 
 .grade-badge {
-  background: rgba(255, 255, 255, 0.85);
-  color: #37474f;
-  padding: 3px 9px;
+  background: #F1F5F9;
+  color: #475569;
+  padding: 2px 9px;
   border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .theme-style-pill {
-  padding: 3px 10px;
+  padding: 2px 10px;
   border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 900;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .poem-card-header {
@@ -749,60 +684,60 @@ function goRandomPoem() {
 }
 
 .poem-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
-  color: #1c2833;
+  color: #0F172A;
 }
 
 .quick-audio-btn {
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.92);
-  color: #d84315;
+  border: 1px solid #FDE68A;
+  background: #FFFBEB;
+  color: #B45309;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 11.5px;
+  font-weight: 800;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s;
+  transition: all 0.15s;
 }
 
 .quick-audio-btn:hover {
-  transform: scale(1.08);
-  background: #fff;
+  background: #FEF3C7;
 }
 
 .poem-author-row {
-  font-size: 14px;
-  font-weight: 800;
-  color: #455a64;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748B;
 }
 
 .dynasty-tag {
-  color: #bf360c;
+  color: #B45309;
 }
 
 .poem-preview-box {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
+  background: #FAF8F5;
+  border-radius: 14px;
   padding: 12px 14px;
   text-align: center;
-  border: 1.5px dashed rgba(0, 0, 0, 0.12);
+  border: 1px solid #F1F5F9;
 }
 
 .preview-line {
-  font-size: 16.5px;
-  font-weight: 900;
-  color: #263238;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #1E293B;
   line-height: 1.65;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .poem-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #F8FAFC;
 }
 
 .poem-tags {
@@ -813,11 +748,12 @@ function goRandomPoem() {
 
 .mini-tag {
   font-size: 11px;
-  font-weight: 800;
-  color: #546e7a;
-  background: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+  color: #64748B;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   padding: 2px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .mastery-stars {
@@ -826,26 +762,24 @@ function goRandomPoem() {
 }
 
 .star-dot {
-  font-size: 16px;
-  filter: grayscale(100%) opacity(0.28);
+  font-size: 15px;
+  filter: grayscale(100%) opacity(0.25);
   transition: transform 0.2s, filter 0.2s;
 }
 
 .star-dot.lit {
   filter: none;
-  transform: scale(1.12);
+  transform: scale(1.1);
 }
 
 @media (max-width: 900px) {
-  .stage-tabs-bar {
-    grid-template-columns: repeat(2, 1fr);
+  .stage-and-random-group {
+    align-items: flex-start;
+    width: 100%;
   }
 }
 
 @media (max-width: 560px) {
-  .stage-tabs-bar {
-    grid-template-columns: 1fr;
-  }
   .search-box {
     width: 100%;
   }

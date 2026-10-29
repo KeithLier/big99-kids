@@ -255,24 +255,27 @@ function goToStudio() {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%);
-  border: 3px solid #ff7043;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid #DDD6FE;
   border-radius: 999px;
-  padding: 8px 16px 8px 12px;
+  padding: 6px 14px 6px 8px;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(216, 67, 21, 0.25);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s;
 }
 
 .pod-collapsed-btn:hover {
-  transform: translateY(-3px) scale(1.03);
+  transform: translateY(-2px);
+  border-color: #8B5CF6;
 }
 
 .pod-mic-icon {
-  font-size: 26px;
-  background: #fbe9e7;
-  width: 42px;
-  height: 42px;
+  font-size: 20px;
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -286,39 +289,39 @@ function goToStudio() {
 }
 
 .pod-role-tag {
-  font-size: 13.5px;
-  font-weight: 900;
-  color: #bf360c;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0F172A;
 }
 
 .pod-sub-hint {
   font-size: 11px;
-  font-weight: 800;
-  color: #2e7d32;
+  font-weight: 700;
+  color: #059669;
 }
 
 .pod-count-badge {
-  background: #ff6d00;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 900;
+  background: #7C3AED;
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
 }
 
 /* Expanded Card */
 .pod-expanded-card {
-  width: 370px;
+  width: 360px;
   max-width: calc(100vw - 32px);
-  background: #ffffff;
-  border: 3.5px solid #ff7043;
-  border-radius: 26px;
+  background: #FFFFFF;
+  border: 1.5px solid #DDD6FE;
+  border-radius: 22px;
   padding: 16px 18px;
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.16);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  animation: popBounce 0.22s ease;
+  animation: popBounce 0.2s ease;
 }
 
 .pod-header {

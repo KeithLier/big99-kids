@@ -257,8 +257,8 @@ function closeModal() {
 .sig-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 35, 25, 0.65);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
   z-index: 4000;
   display: flex;
   align-items: center;
@@ -268,19 +268,19 @@ function closeModal() {
 
 .sig-modal-card {
   width: 100%;
-  max-width: 650px;
-  background: #fffef9;
-  border-radius: 28px;
-  border: 5px solid #ff9800;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  max-width: 640px;
+  background: #FFFFFF;
+  border-radius: 24px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
   overflow: hidden;
-  animation: popBounce 0.28s ease;
+  animation: popBounce 0.24s ease;
 }
 
 .sig-modal-header {
-  background: linear-gradient(135deg, #ff8f00, #ff5722);
-  color: #fff;
-  padding: 14px 20px;
+  background: linear-gradient(135deg, #D97706, #EA580C);
+  color: #FFFFFF;
+  padding: 16px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;

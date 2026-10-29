@@ -2503,10 +2503,10 @@ onBeforeUnmount(() => {
 
     .big99-page-wrapper {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: linear-gradient(135deg, #d8f5e5 0%, #fff6d6 50%, #fce4ec 100%);
+      background: transparent;
       min-height: 100vh;
       min-height: 100dvh;
-      padding: 8px;
+      padding: 16px 12px 40px;
       color: var(--text-dark);
       overflow-x: hidden;
       display: flex;
@@ -2524,18 +2524,18 @@ onBeforeUnmount(() => {
       display: none;
       width: 100%;
       max-width: 1320px;
-      background: linear-gradient(90deg, #fff8e1, #e8f5e9);
-      border: 2px solid #81c784;
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
       border-radius: 14px;
-      padding: 6px 14px;
-      margin-bottom: 6px;
+      padding: 8px 14px;
+      margin-bottom: 10px;
       font-size: 13px;
       font-weight: 800;
-      color: #1b5e20;
+      color: #0369A1;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      box-shadow: var(--shadow-xs);
     }
 
     @media (max-width: 960px) {
@@ -2564,11 +2564,12 @@ onBeforeUnmount(() => {
       height: fit-content;
       align-self: flex-start;
       flex-shrink: 0;
-      background: var(--bg-cream);
-      border: 10px solid var(--border-green);
-      border-radius: 32px;
-      padding: 12px 16px 18px;
-      box-shadow: 0 12px 32px rgba(20, 110, 50, 0.16), inset 0 0 0 3px #a7e1b7;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-top: 5px solid #0EA5E9;
+      border-radius: 24px;
+      padding: 16px 20px 22px;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
       position: relative;
       transform-origin: top center;
       transition: transform 0.2s ease;
@@ -2585,13 +2586,12 @@ onBeforeUnmount(() => {
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
-      background: #ffffffeb;
-      border: 2px solid #b8e6c5;
-      border-radius: 18px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+      gap: 10px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
     }
 
     .progress-box {
@@ -2600,7 +2600,7 @@ onBeforeUnmount(() => {
       gap: 8px;
       font-weight: 800;
       font-size: 13px;
-      color: #1b6b36;
+      color: #0F172A;
     }
 
     .progress-bar-outer {

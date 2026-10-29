@@ -50,137 +50,138 @@
         </button>
       </nav>
 
-      <!-- ================= MODE 1: 拼音认读馆 (先选卡片 ➔ 再深度学习) ================= -->
+      <!-- ================= MODE 1: 拼音认读馆 (左常驻四线三格黑板 + 右拼音卡片墙分栏工作台) ================= -->
       <section v-if="activeMode === 'cards'" class="mode-panel cards-panel">
-        <!-- Category Pills -->
-        <div class="cat-switcher">
-          <button
-            v-for="cat in categories"
-            :key="cat.id"
-            type="button"
-            class="cat-btn"
-            :class="{ active: activeCategory === cat.id }"
-            @click="selectCategory(cat.id)"
-          >
-            <span>{{ cat.icon }}</span>
-            <span>{{ cat.name }}</span>
-            <span class="cat-count">{{ cat.count }}个</span>
-          </button>
-
-          <button type="button" class="read-all-btn" @click="speakCurrentItemDetail">
-            🔊 点读当前拼音与顺口溜
-          </button>
-        </div>
-
-        <!-- STEP 1 (TOP): Pinyin Cards Wall (先选择拼音卡片) -->
-        <div class="cards-wall-section">
-          <div class="cards-wall-header">
-            <h3>👆 第一步：请先点击下方拼音卡片选择要学习的拼音（已点亮 {{ categoryLearnedCount }} / {{ currentCategoryList.length }}）</h3>
-            <span class="wall-tip">💡 点击卡片即可听标准拼音读音，并在下方展开深度学习黑板！</span>
-          </div>
-
-          <div class="pinyin-cards-grid">
-            <button
-              v-for="item in currentCategoryList"
-              :key="item.id"
-              type="button"
-              class="py-card-item"
-              :class="{
-                active: selectedItem?.id === item.id,
-                learned: isItemLearned(item.id)
-              }"
-              @click="handleSelectCard(item)"
-            >
-              <span v-if="isItemLearned(item.id)" class="learned-check" title="已点亮">✅</span>
-              <div class="py-card-mini-lines">
-                <span class="py-card-code">{{ item.code }}</span>
+        <div class="cards-split-workspace">
+          <!-- LEFT STICKY: Interactive Spotlight Blackboard Stage -->
+          <div ref="learningStageRef" class="learning-stage-wrapper" v-if="selectedItem">
+            <div class="learning-stage-header">
+              <div class="stage-title-left">
+                <span class="step2-badge">📏 四线三格黑板：「{{ selectedItem.code }}」</span>
+                <span class="sub-cat-chip">{{ selectedItem.subGroup }} · 呼读音「{{ selectedItem.readSound }}」</span>
               </div>
-              <div class="py-card-bottom">
-                <span class="py-card-emoji">{{ item.emoji }}</span>
-                <span class="py-card-word">{{ item.word }}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- STEP 2 (BOTTOM): Interactive Spotlight Blackboard Stage (再学习选中的拼音) -->
-        <div ref="learningStageRef" class="learning-stage-wrapper" v-if="selectedItem">
-          <div class="learning-stage-header">
-            <div class="stage-title-left">
-              <span class="step2-badge">📖 第二步：正在学习「{{ selectedItem.code }}」</span>
-              <span class="sub-cat-chip">{{ selectedItem.subGroup }} · 标准呼读音：「{{ selectedItem.readSound }}」</span>
-            </div>
-            <div class="stage-quick-jumps">
-              <button type="button" class="jump-link-btn orange" @click="jumpToTrainWith(selectedItem)">
-                🚂 带「{{ selectedItem.code }}」坐四声小火车 ➔
-              </button>
-              <button type="button" class="jump-link-btn blue" @click="jumpToSpellWith(selectedItem)">
-                🧪 带「{{ selectedItem.code }}」去魔法拼读室 ➔
+              <button type="button" class="read-all-btn" @click="speakCurrentItemDetail">
+                🔊 连读顺口溜
               </button>
             </div>
-          </div>
 
-          <div class="spotlight-stage">
-            <!-- Left: Four-line Three-grid Standard Box -->
-            <div class="four-line-card" @click="speakPinyinItem(selectedItem)">
-              <div class="four-line-badge">📏 标准四线三格 (点击听标准音)</div>
-              <div class="four-line-grid">
-                <div class="grid-line line-1"></div>
-                <div class="grid-line line-2"></div>
-                <div class="grid-line line-3"></div>
-                <div class="grid-line line-4"></div>
-                <span class="pinyin-big-letter">{{ selectedItem.code }}</span>
-              </div>
-              <div class="sound-hint">
-                🔊 标准呼读音：「<strong>{{ selectedItem.readSound }}</strong>」
-              </div>
-            </div>
-
-            <!-- Right: Chant, Tip & Word Association -->
-            <div class="spotlight-info">
-              <div class="chant-box" @click="speakChant(selectedItem)">
-                <div class="chant-emoji">{{ selectedItem.emoji }}</div>
-                <div class="chant-content">
-                  <div class="chant-label">👏 巧记拍手顺口溜（点击跟读·纯正拼音发音）</div>
-                  <div class="chant-text">{{ selectedItem.chant }}</div>
+            <div class="spotlight-stage">
+              <!-- Top: Four-line Three-grid Standard Box -->
+              <div class="four-line-card" @click="speakPinyinItem(selectedItem)">
+                <div class="four-line-top-row">
+                  <span class="four-line-badge">📏 标准四线三格 (点击听纯正呼读音)</span>
+                  <span class="sound-hint">呼读音：<strong>{{ selectedItem.readSound }}</strong> 🔊</span>
+                </div>
+                <div class="four-line-grid">
+                  <div class="grid-line line-1"></div>
+                  <div class="grid-line line-2"></div>
+                  <div class="grid-line line-3"></div>
+                  <div class="grid-line line-4"></div>
+                  <span class="pinyin-big-letter">{{ selectedItem.code }}</span>
                 </div>
               </div>
 
-              <div class="tip-and-word-row">
-                <div class="mouth-tip-box" @click="speakText(selectedItem.tip)">
-                  <div class="tip-title">👄 发音口型小窍门（点击听讲解）</div>
-                  <p>{{ selectedItem.tip }}</p>
-                </div>
-
-                <div class="word-demo-card" @click="speakWord(selectedItem)">
-                  <span class="word-demo-emoji">{{ selectedItem.wordEmoji }}</span>
-                  <div>
-                    <div class="word-demo-py">{{ selectedItem.wordPinyin }}</div>
-                    <div class="word-demo-cn">{{ selectedItem.word }}</div>
-                    <div class="word-demo-listen">🔊 点击读词语</div>
+              <!-- Bottom: Chant, Tip & Word Association -->
+              <div class="spotlight-info">
+                <div class="chant-box" @click="speakChant(selectedItem)">
+                  <div class="chant-emoji">{{ selectedItem.emoji }}</div>
+                  <div class="chant-content">
+                    <div class="chant-label">👏 巧记拍手顺口溜（点击跟读）</div>
+                    <div class="chant-text">{{ selectedItem.chant }}</div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Quick 4 Tones Strip -->
-              <div class="quick-tones-strip">
-                <div class="strip-head">
-                  <span>🎶 四声调点读练习（一声平 ˉ · 二声扬 ˊ · 三声拐弯 ˇ · 四声降 ˋ）</span>
+                <div class="tip-and-word-row">
+                  <div class="mouth-tip-box" @click="speakText(selectedItem.tip)">
+                    <div class="tip-title">👄 发音口型小窍门</div>
+                    <p>{{ selectedItem.tip }}</p>
+                  </div>
+
+                  <div class="word-demo-card" @click="speakWord(selectedItem)">
+                    <span class="word-demo-emoji">{{ selectedItem.wordEmoji }}</span>
+                    <div>
+                      <div class="word-demo-py">{{ selectedItem.wordPinyin }}</div>
+                      <div class="word-demo-cn">{{ selectedItem.word }}</div>
+                      <div class="word-demo-listen">🔊 点击读词语</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="tones-mini-grid">
-                  <button
-                    v-for="t in selectedItem.tones"
-                    :key="t.tone"
-                    type="button"
-                    class="tone-mini-btn"
-                    @click="speakToneItem(t)"
-                  >
-                    <span class="t-badge">{{ t.tone }}声</span>
-                    <span class="t-py">{{ t.py }}</span>
-                    <span class="t-word">{{ t.emoji }} {{ t.word }}</span>
+
+                <!-- Quick 4 Tones Strip -->
+                <div class="quick-tones-strip">
+                  <div class="strip-head">
+                    <span>🎶 四声调点读（ˉ 一声平 · ˊ 二声扬 · ˇ 三声拐弯 · ˋ 四声降）</span>
+                  </div>
+                  <div class="tones-mini-grid">
+                    <button
+                      v-for="t in selectedItem.tones"
+                      :key="t.tone"
+                      type="button"
+                      class="tone-mini-btn"
+                      @click="speakToneItem(t)"
+                    >
+                      <span class="t-badge">{{ t.tone }}声</span>
+                      <span class="t-py">{{ t.py }}</span>
+                      <span class="t-word">{{ t.emoji }} {{ t.word }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Quick Jump Actions -->
+                <div class="stage-quick-jumps">
+                  <button type="button" class="jump-link-btn orange" @click="jumpToTrainWith(selectedItem)">
+                    🚂 带「{{ selectedItem.code }}」坐四声小火车 ➔
+                  </button>
+                  <button type="button" class="jump-link-btn blue" @click="jumpToSpellWith(selectedItem)">
+                    🧪 带「{{ selectedItem.code }}」去魔法拼读室 ➔
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Category Switcher & Pinyin Cards Wall -->
+          <div class="cards-wall-section">
+            <div class="cat-switcher">
+              <button
+                v-for="cat in categories"
+                :key="cat.id"
+                type="button"
+                class="cat-btn"
+                :class="{ active: activeCategory === cat.id }"
+                @click="selectCategory(cat.id)"
+              >
+                <span>{{ cat.icon }}</span>
+                <span>{{ cat.name }}</span>
+                <span class="cat-count">{{ cat.count }}</span>
+              </button>
+            </div>
+
+            <div class="cards-wall-header">
+              <h3>👆 点击下方拼音卡片，左侧黑板即刻同步发音与顺口溜（已点亮 {{ categoryLearnedCount }} / {{ currentCategoryList.length }}）</h3>
+            </div>
+
+            <div class="pinyin-cards-grid">
+              <button
+                v-for="item in currentCategoryList"
+                :key="item.id"
+                type="button"
+                class="py-card-item"
+                :class="{
+                  active: selectedItem?.id === item.id,
+                  learned: isItemLearned(item.id)
+                }"
+                @click="handleSelectCard(item)"
+              >
+                <span v-if="isItemLearned(item.id)" class="learned-check" title="已点亮">✅</span>
+                <div class="py-card-mini-lines">
+                  <span class="py-card-code">{{ item.code }}</span>
+                </div>
+                <div class="py-card-bottom">
+                  <span class="py-card-emoji">{{ item.emoji }}</span>
+                  <span class="py-card-word">{{ item.word }}</span>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -1144,7 +1145,7 @@ onMounted(() => {
 
 <style scoped>
 .pinyin-page {
-  padding: 20px 16px 56px;
+  padding: 20px 20px 56px;
 }
 
 .pinyin-container {
@@ -1152,21 +1153,22 @@ onMounted(() => {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 /* Hero Banner */
 .pinyin-hero {
-  background: linear-gradient(135deg, #fffde7 0%, #e8f5e9 55%, #e0f7fa 100%);
-  border: 4px solid #66bb6a;
-  border-radius: 30px;
-  padding: 24px 28px;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #ECFDF5 100%);
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid #10B981;
+  border-radius: 22px;
+  padding: 22px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  box-shadow: 0 12px 32px rgba(46, 125, 50, 0.12);
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-left {
@@ -1183,107 +1185,113 @@ onMounted(() => {
 
 .stage-chip,
 .rule-chip {
-  padding: 4px 12px;
+  padding: 3px 12px;
   border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .stage-chip {
-  background: #2e7d32;
-  color: #fff;
+  background: #059669;
+  color: #FFFFFF;
 }
 
 .rule-chip {
-  background: #fff;
-  color: #2e7d32;
-  border: 2px solid #81c784;
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
 }
 
 .pinyin-hero h1 {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 900;
-  color: #1b5e20;
-  margin-bottom: 8px;
+  color: #0F172A;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
 }
 
 .pinyin-hero p {
-  font-size: 15px;
-  line-height: 1.65;
-  color: #37474f;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.pinyin-hero p strong {
+  color: #0F172A;
 }
 
 .hero-stats-card {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .stat-pill {
-  background: #fff;
-  border: 3px solid #81c784;
-  border-radius: 22px;
-  padding: 14px 18px;
+  background: #FFFFFF;
+  border: 1px solid #A7F3D0;
+  border-radius: 16px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 165px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  min-width: 155px;
+  box-shadow: var(--shadow-xs);
 }
 
 .stat-pill.gold {
-  border-color: #ffb300;
-  background: linear-gradient(135deg, #ffffff, #fff8e1);
+  border-color: #FDE68A;
+  background: #FFFBEB;
 }
 
 .stat-icon {
-  font-size: 34px;
+  font-size: 28px;
 }
 
 .stat-val {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 900;
-  color: #1b5e20;
+  color: #0F172A;
 }
 
 .stat-val small {
-  font-size: 13px;
-  color: #78909c;
+  font-size: 12px;
+  color: #64748B;
 }
 
 .stat-lbl {
-  font-size: 12px;
-  font-weight: 800;
-  color: #546e7a;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
 }
 
 /* Mode Switcher Tabs */
 .mode-tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 .mode-tab-btn {
-  border: 3px solid #e0e0e0;
-  background: #fff;
-  border-radius: 22px;
-  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  border-radius: 18px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: var(--shadow-xs);
 }
 
 .mode-tab-btn:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  border-color: #CBD5E1;
 }
 
 .tab-emoji {
-  font-size: 32px;
+  font-size: 26px;
 }
 
 .tab-text {
@@ -1292,110 +1300,464 @@ onMounted(() => {
 }
 
 .tab-title {
-  font-size: 16.5px;
+  font-size: 15px;
   font-weight: 900;
-  color: #263238;
+  color: #0F172A;
 }
 
 .tab-sub {
-  font-size: 12px;
-  font-weight: 700;
-  color: #607d8b;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748B;
 }
 
 .mode-tab-btn.tab-green.active {
-  background: linear-gradient(135deg, #2e7d32, #43a047);
-  border-color: #1b5e20;
-  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3);
+  background: #059669;
+  border-color: #047857;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.24);
 }
 .mode-tab-btn.tab-orange.active {
-  background: linear-gradient(135deg, #ef6c00, #ff9800);
-  border-color: #e65100;
-  box-shadow: 0 8px 20px rgba(239, 108, 0, 0.3);
+  background: #EA580C;
+  border-color: #C2410C;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.24);
 }
 .mode-tab-btn.tab-blue.active {
-  background: linear-gradient(135deg, #0288d1, #29b6f6);
-  border-color: #01579b;
-  box-shadow: 0 8px 20px rgba(2, 136, 209, 0.3);
+  background: #0284C7;
+  border-color: #0369A1;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.24);
 }
 .mode-tab-btn.tab-purple.active {
-  background: linear-gradient(135deg, #8e24aa, #ab47bc);
-  border-color: #4a148c;
-  box-shadow: 0 8px 20px rgba(142, 36, 170, 0.3);
+  background: #7C3AED;
+  border-color: #6D28D9;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.24);
 }
 
 .mode-tab-btn.active .tab-title,
 .mode-tab-btn.active .tab-sub {
-  color: #fff;
+  color: #FFFFFF;
 }
 
 /* Mode Panel Common */
 .mode-panel {
-  background: rgba(255, 255, 255, 0.94);
-  border: 3px solid #c8e6c9;
-  border-radius: 28px;
-  padding: 24px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  background: transparent;
 }
 
-/* Category Switcher */
-.cat-switcher {
+.tones-panel,
+.spell-panel,
+.games-panel {
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Master-Detail Split Workspace for Cards Mode */
+.cards-split-workspace {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* LEFT STICKY: Learning Stage Wrapper */
+.learning-stage-wrapper {
+  position: sticky;
+  top: 84px;
+  background: #FFFFFF;
+  border: 1.5px solid #A7F3D0;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.learning-stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.stage-title-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.cat-btn {
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 2.5px solid #a5d6a7;
-  background: #f1f8e9;
-  color: #2e7d32;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  transition: all 0.18s;
+  flex-wrap: wrap;
 }
 
-.cat-btn.active {
-  background: linear-gradient(135deg, #ff7043, #d84315);
-  color: #fff;
-  border-color: #bf360c;
-  box-shadow: 0 4px 12px rgba(216, 67, 21, 0.3);
-}
-
-.cat-count {
-  font-size: 12px;
-  background: rgba(255, 255, 255, 0.25);
-  padding: 2px 8px;
+.step2-badge {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  padding: 4px 12px;
   border-radius: 99px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sub-cat-chip {
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  background: #F8FAFC;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid #E2E8F0;
 }
 
 .read-all-btn {
-  margin-left: auto;
   border: none;
-  background: linear-gradient(135deg, #26a69a, #00897b);
-  color: #fff;
-  padding: 10px 20px;
+  background: #059669;
+  color: #FFFFFF;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-weight: 900;
-  font-size: 14.5px;
+  font-weight: 800;
+  font-size: 12.5px;
   cursor: pointer;
-  box-shadow: 0 4px 0 #00695c;
+  transition: background 0.15s;
 }
 
-/* STEP 1: Pinyin Cards Wall (TOP) */
+.read-all-btn:hover {
+  background: #047857;
+}
+
+.spotlight-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.four-line-card {
+  background: #FFFDF9;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 18px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.18s;
+}
+
+.four-line-card:hover {
+  border-color: #10B981;
+}
+
+.four-line-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.four-line-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #64748B;
+}
+
+.sound-hint {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #059669;
+  background: #ECFDF5;
+  padding: 2px 10px;
+  border-radius: 99px;
+}
+
+.sound-hint strong {
+  color: #047857;
+  font-size: 14px;
+}
+
+/* Standard 4-Line 3-Grid */
+.four-line-grid {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.grid-line {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1.5px;
+  background: #CBD5E1;
+}
+
+.grid-line.line-1 { top: 22px; }
+.grid-line.line-2 { top: 52px; border-top: 1.5px dashed #FDA4AF; background: transparent; }
+.grid-line.line-3 { top: 86px; background: #F43F5E; height: 2px; }
+.grid-line.line-4 { top: 114px; }
+
+.pinyin-big-letter {
+  position: relative;
+  z-index: 2;
+  font-size: 64px;
+  font-weight: 900;
+  color: #047857;
+  font-family: "Comic Sans MS", "PingFang SC", "Arial Rounded MT Bold", sans-serif;
+  line-height: 1;
+  transform: translateY(-3px);
+}
+
+.spotlight-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chant-box {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chant-box:hover {
+  background: #FEF3C7;
+}
+
+.chant-emoji {
+  font-size: 36px;
+}
+
+.chant-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #B45309;
+  margin-bottom: 2px;
+}
+
+.chant-text {
+  font-size: 16.5px;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.tip-and-word-row {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 10px;
+}
+
+.mouth-tip-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.tip-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.mouth-tip-box p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #334155;
+  font-weight: 600;
+}
+
+.word-demo-card {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.word-demo-card:hover {
+  transform: translateY(-2px);
+}
+
+.word-demo-emoji {
+  font-size: 34px;
+}
+
+.word-demo-py {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #047857;
+}
+
+.word-demo-cn {
+  font-size: 16px;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.word-demo-listen {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Quick 4 Tones Strip */
+.quick-tones-strip {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.strip-head {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.tones-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.tone-mini-btn {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 6px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  transition: all 0.15s;
+}
+
+.tone-mini-btn:hover {
+  background: #ECFDF5;
+  border-color: #10B981;
+  transform: translateY(-1px);
+}
+
+.t-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.t-py {
+  font-size: 16px;
+  font-weight: 900;
+  color: #047857;
+}
+
+.t-word {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.stage-quick-jumps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.jump-link-btn {
+  border: none;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.jump-link-btn:hover {
+  transform: translateY(-1px);
+}
+
+.jump-link-btn.orange {
+  background: #F59E0B;
+}
+
+.jump-link-btn.blue {
+  background: #0EA5E9;
+}
+
+/* RIGHT: Pinyin Cards Wall */
 .cards-wall-section {
-  background: #f9fbe7;
-  border: 2.5px solid #c5e1a5;
-  border-radius: 24px;
-  padding: 18px 20px;
-  margin-bottom: 24px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cat-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.cat-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #475569;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.16s;
+}
+
+.cat-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.cat-btn.active {
+  background: #059669;
+  color: #FFFFFF;
+  border-color: #047857;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+}
+
+.cat-count {
+  font-size: 11.5px;
+  background: rgba(15, 23, 42, 0.07);
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+
+.cat-btn.active .cat-count {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .cards-wall-header {
@@ -1408,414 +1770,97 @@ onMounted(() => {
 }
 
 .cards-wall-header h3 {
-  font-size: 17.5px;
-  font-weight: 900;
-  color: #1b5e20;
-}
-
-.wall-tip {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
-  color: #ef6c00;
+  color: #475569;
 }
 
 .pinyin-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(98px, 1fr));
+  gap: 10px;
 }
 
 .py-card-item {
   position: relative;
-  background: #fff;
-  border: 3px solid #e0e0e0;
-  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
   padding: 10px 8px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .py-card-item:hover {
-  transform: translateY(-4px);
-  border-color: #66bb6a;
+  transform: translateY(-2px);
+  border-color: #10B981;
 }
 
 .py-card-item.learned {
-  border-color: #a5d6a7;
-  background: #ffffff;
+  border-color: #A7F3D0;
+  background: #F0FDF4;
 }
 
 .py-card-item.active {
-  border-color: #ff7043;
-  background: linear-gradient(180deg, #fff8f6, #fff3e0);
-  box-shadow: 0 8px 18px rgba(255, 112, 67, 0.28);
-  transform: translateY(-4px) scale(1.04);
+  border-color: #059669;
+  border-width: 2px;
+  background: #ECFDF5;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18);
+  transform: translateY(-2px);
 }
 
 .learned-check {
   position: absolute;
-  top: 6px;
-  right: 8px;
-  font-size: 12px;
+  top: 5px;
+  right: 6px;
+  font-size: 11px;
 }
 
 .py-card-mini-lines {
   width: 100%;
-  height: 50px;
+  height: 46px;
   background: linear-gradient(
     to bottom,
     transparent 22%,
-    #bbdefb 22%,
-    #bbdefb 25%,
-    transparent 25%,
+    #E2E8F0 22%,
+    #E2E8F0 24%,
+    transparent 24%,
     transparent 48%,
-    #f8bbd0 48%,
-    #f8bbd0 51%,
-    transparent 51%,
+    #FECDD3 48%,
+    #FECDD3 50%,
+    transparent 50%,
     transparent 75%,
-    #ffcdd2 75%,
-    #ffcdd2 78%,
-    transparent 78%
+    #FDA4AF 75%,
+    #FDA4AF 77%,
+    transparent 77%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .py-card-code {
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 900;
-  color: #1b5e20;
+  color: #0F172A;
+}
+
+.py-card-item.active .py-card-code {
+  color: #047857;
 }
 
 .py-card-bottom {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #455a64;
-}
-
-/* STEP 2: Learning Stage Wrapper (BOTTOM) */
-.learning-stage-wrapper {
-  background: linear-gradient(135deg, #fffdf7, #f1f8e9);
-  border: 3.5px solid #66bb6a;
-  border-radius: 26px;
-  padding: 20px;
-  box-shadow: 0 10px 26px rgba(46, 125, 50, 0.1);
-}
-
-.learning-stage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px dashed #c8e6c9;
-}
-
-.stage-title-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.step2-badge {
-  background: #2e7d32;
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: 99px;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.sub-cat-chip {
-  font-size: 14px;
-  font-weight: 900;
-  color: #bf360c;
-  background: #fff3e0;
-  padding: 5px 14px;
-  border-radius: 99px;
-  border: 1.5px solid #ffb74d;
-}
-
-.stage-quick-jumps {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.jump-link-btn {
-  border: none;
-  padding: 8px 16px;
-  border-radius: 99px;
-  font-size: 13px;
-  font-weight: 900;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-
-.jump-link-btn:hover {
-  transform: translateY(-2px);
-}
-
-.jump-link-btn.orange {
-  background: linear-gradient(135deg, #ff9800, #ef6c00);
-}
-
-.jump-link-btn.blue {
-  background: linear-gradient(135deg, #29b6f6, #0288d1);
-}
-
-.spotlight-stage {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 22px;
-}
-
-.four-line-card {
-  background: #fff;
-  border: 3px solid #ffb74d;
-  border-radius: 22px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(255, 152, 0, 0.12);
-  transition: transform 0.18s;
-}
-
-.four-line-card:hover {
-  transform: scale(1.02);
-}
-
-.four-line-badge {
-  font-size: 12.5px;
-  font-weight: 900;
-  color: #e65100;
-  background: #fff3e0;
-  padding: 4px 12px;
-  border-radius: 999px;
-}
-
-/* Standard 4-Line 3-Grid */
-.four-line-grid {
-  position: relative;
-  width: 100%;
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fffef8;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.grid-line {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  height: 2px;
-  background: #90caf9;
-}
-
-.grid-line.line-1 { top: 24px; }
-.grid-line.line-2 { top: 60px; border-top: 2px dashed #f48fb1; background: transparent; }
-.grid-line.line-3 { top: 98px; background: #ef5350; height: 2.5px; }
-.grid-line.line-4 { top: 132px; }
-
-.pinyin-big-letter {
-  position: relative;
-  z-index: 2;
-  font-size: 74px;
-  font-weight: 900;
-  color: #1b5e20;
-  font-family: "Comic Sans MS", "PingFang SC", "Arial Rounded MT Bold", sans-serif;
-  line-height: 1;
-  transform: translateY(-4px);
-}
-
-.sound-hint {
-  font-size: 14px;
-  font-weight: 800;
-  color: #455a64;
-  text-align: center;
-}
-
-.sound-hint strong {
-  color: #d84315;
-  font-size: 17px;
-}
-
-.spotlight-info {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  justify-content: space-between;
-}
-
-.chant-box {
-  background: linear-gradient(135deg, #fff8e1, #ffecb3);
-  border: 2.5px solid #ffb300;
-  border-radius: 20px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-}
-
-.chant-emoji {
-  font-size: 46px;
-}
-
-.chant-label {
   font-size: 12px;
-  font-weight: 900;
-  color: #e65100;
-  margin-bottom: 4px;
-}
-
-.chant-text {
-  font-size: 21px;
-  font-weight: 900;
-  color: #bf360c;
-}
-
-.tip-and-word-row {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 14px;
-}
-
-.mouth-tip-box {
-  background: #fff;
-  border: 2px solid #b2dfdb;
-  border-radius: 18px;
-  padding: 12px 16px;
-  cursor: pointer;
-}
-
-.tip-title {
-  font-size: 13px;
-  font-weight: 900;
-  color: #00695c;
-  margin-bottom: 4px;
-}
-
-.mouth-tip-box p {
-  font-size: 14px;
-  line-height: 1.55;
-  color: #37474f;
   font-weight: 700;
-}
-
-.word-demo-card {
-  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-  border: 2.5px solid #90caf9;
-  border-radius: 18px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-
-.word-demo-card:hover {
-  transform: translateY(-2px);
-}
-
-.word-demo-emoji {
-  font-size: 44px;
-}
-
-.word-demo-py {
-  font-size: 15px;
-  font-weight: 900;
-  color: #1565c0;
-}
-
-.word-demo-cn {
-  font-size: 20px;
-  font-weight: 900;
-  color: #263238;
-}
-
-.word-demo-listen {
-  font-size: 11.5px;
-  font-weight: 800;
-  color: #6a1b9a;
-}
-
-/* Quick 4 Tones Strip */
-.quick-tones-strip {
-  background: #fff;
-  border: 2px solid #c5e1a5;
-  border-radius: 18px;
-  padding: 12px 14px;
-}
-
-.strip-head {
-  font-size: 12.5px;
-  font-weight: 900;
-  color: #2e7d32;
-  margin-bottom: 8px;
-}
-
-.tones-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.tone-mini-btn {
-  background: #f9fbe7;
-  border: 2px solid #aed581;
-  border-radius: 14px;
-  padding: 8px 10px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transition: all 0.15s;
-}
-
-.tone-mini-btn:hover {
-  background: #e8f5e9;
-  transform: translateY(-2px);
-  border-color: #43a047;
-}
-
-.t-badge {
-  font-size: 11px;
-  font-weight: 800;
-  color: #558b2f;
-}
-
-.t-py {
-  font-size: 20px;
-  font-weight: 900;
-  color: #d84315;
-}
-
-.t-word {
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #37474f;
+  color: #475569;
 }
 
 /* ================= MODE 2: Tone Train Styles ================= */
@@ -2639,11 +2684,19 @@ onMounted(() => {
   cursor: pointer;
 }
 
+@media (max-width: 1024px) {
+  .cards-split-workspace {
+    grid-template-columns: 1fr;
+  }
+  .learning-stage-wrapper {
+    position: static;
+  }
+}
+
 @media (max-width: 960px) {
   .mode-tabs {
     grid-template-columns: repeat(2, 1fr);
   }
-  .spotlight-stage,
   .train-stage-box,
   .tip-and-word-row {
     grid-template-columns: 1fr;
