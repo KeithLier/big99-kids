@@ -115,32 +115,44 @@ export function useSound() {
 
       const voices = window.speechSynthesis.getVoices() || []
       let targetVoice = null
+      let isModMale = false
 
       // 1. 若显式传入了 voiceURI（例如在设置页面点击某一个内置声音的「试听」按钮）
       if (voiceURI) {
-        targetVoice = findVoiceByUriOrName(voices, voiceURI)
+        if (voiceURI.includes('__male_mod') || voiceURI === '__default_zh_male__') {
+          isModMale = true
+          const cleanURI = voiceURI.replace('__male_mod', '')
+          targetVoice = findVoiceByUriOrName(voices, cleanURI)
+        } else {
+          targetVoice = findVoiceByUriOrName(voices, voiceURI)
+        }
       }
 
-      // 2. 若未指定临时试听声音，检查是否处于「我的录入音色」模式或「用户已选浏览器声音」
+      // 2. 若未指定临时试听声音，检查用户选中的中文发音人
       if (!targetVoice) {
-        if (lang.startsWith('en')) {
-          const preferredEnURI = isMyTimbreMode
-            ? (cfg.timbreProfile?.matchedEnVoiceURI || cfg.selectedEnVoiceURI)
-            : cfg.selectedEnVoiceURI
-          targetVoice =
-            findVoiceByUriOrName(voices, preferredEnURI) ||
-            voices.find(v => (v.lang === 'en-US' || v.lang === 'en_US') && (v.name.includes('Samantha') || v.name.includes('Ava') || v.name.includes('Victoria') || v.name.includes('Google') || v.name.includes('Jenny'))) ||
-            voices.find(v => v.lang.startsWith('en-US') || v.lang.startsWith('en_US')) ||
-            voices.find(v => v.lang.startsWith('en'))
-        } else {
-          const preferredZhURI = isMyTimbreMode
-            ? (cfg.timbreProfile?.matchedZhVoiceURI || cfg.selectedZhVoiceURI)
-            : cfg.selectedZhVoiceURI
-          targetVoice =
-            findVoiceByUriOrName(voices, preferredZhURI) ||
-            voices.find(v => v.lang.includes('zh-CN') && (v.name.includes('Ting') || v.name.includes('Meijia') || v.name.includes('Xiaoxiao'))) ||
-            voices.find(v => v.lang.includes('zh'))
+        const preferredZhURI = isMyTimbreMode
+          ? (cfg.timbreProfile?.matchedZhVoiceURI || cfg.selectedZhVoiceURI)
+          : cfg.selectedZhVoiceURI
+
+        if (preferredZhURI && preferredZhURI.includes('__male_mod')) {
+          isModMale = true
+          const cleanURI = preferredZhURI.replace('__male_mod', '')
+          targetVoice = findVoiceByUriOrName(voices, cleanURI)
+        } else if (preferredZhURI) {
+          targetVoice = findVoiceByUriOrName(voices, preferredZhURI)
         }
+
+        if (!targetVoice) {
+          targetVoice =
+            voices.find(v => v.lang.includes('zh-CN') && (v.name.includes('Ting') || v.name.includes('Meijia') || v.name.includes('Xiaoxiao'))) ||
+            voices.find(v => v.lang.includes('zh') || v.lang.includes('cmn')) ||
+            voices[0]
+        }
+      }
+
+      if (isModMale) {
+        utter.pitch = 0.82
+        utter.rate = Math.max(0.75, Math.min(1.2, (Number(rate) || 0.92) * 0.96))
       }
 
       if (targetVoice) {

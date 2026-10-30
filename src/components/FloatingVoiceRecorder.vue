@@ -1,21 +1,22 @@
 <template>
-  <div class="floating-voice-pod" :class="{ expanded: isExpanded, recording: isRecordingGlobal }">
-    <!-- Collapsed Cute Microphone Bubble -->
+  <div
+    v-if="!voiceSettings.hideFloatingRecorder"
+    class="floating-voice-pod"
+    :class="{ expanded: isExpanded, recording: isRecordingGlobal }"
+  >
+    <!-- Collapsed Minimalist Round Microphone Icon -->
     <button
       v-if="!isExpanded"
       type="button"
-      class="pod-collapsed-btn"
+      class="pod-collapsed-icon-btn"
+      :class="{ 'has-record': hasCurrentPhraseRecorded }"
       @click="toggleExpand"
-      title="打开「声音设置 & 随手录」"
+      :title="`声音随手录 (${activeVoiceSummaryLabel}) · 点击打开`"
     >
-      <span class="pod-mic-icon">🎙️</span>
-      <div class="pod-mini-info">
-        <span class="pod-role-tag">{{ activeVoiceSummaryLabel }}</span>
-        <span class="pod-sub-hint">
-          {{ hasCurrentPhraseRecorded ? '✅ 本句已有真人配音' : '点此切换声音或录下原声' }}
-        </span>
-      </div>
-      <span v-if="totalRecordedCount > 0" class="pod-count-badge">{{ totalRecordedCount }}</span>
+      <span class="pod-mic-emoji">🎙️</span>
+      <span v-if="totalRecordedCount > 0" class="pod-mini-dot" :title="`已录制 ${totalRecordedCount} 条`">
+        {{ totalRecordedCount }}
+      </span>
     </button>
 
     <!-- Expanded Interactive Recording & Voice Switcher Capsule -->
@@ -251,62 +252,58 @@ function goToStudio() {
   z-index: 2500;
 }
 
-.pod-collapsed-btn {
+.pod-collapsed-icon-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #DDD6FE;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.22);
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border: 1.5px solid #DDD6FE;
-  border-radius: 999px;
-  padding: 6px 14px 6px 8px;
-  cursor: pointer;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.pod-collapsed-btn:hover {
-  transform: translateY(-2px);
+.pod-collapsed-icon-btn:hover {
+  transform: translateY(-2px) scale(1.06);
   border-color: #8B5CF6;
+  background: #FFFFFF;
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.3);
 }
 
-.pod-mic-icon {
-  font-size: 20px;
-  background: #F5F3FF;
-  border: 1px solid #DDD6FE;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.pod-collapsed-icon-btn.has-record {
+  border-color: #A7F3D0;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+}
+
+.pod-mic-emoji {
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.pod-mini-info {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.pod-role-tag {
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #0F172A;
-}
-
-.pod-sub-hint {
-  font-size: 11px;
-  font-weight: 700;
-  color: #059669;
-}
-
-.pod-count-badge {
+.pod-mini-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
   background: #7C3AED;
   color: #FFFFFF;
-  font-size: 11.5px;
-  font-weight: 800;
-  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  padding: 0 4px;
   border-radius: 999px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Expanded Card */

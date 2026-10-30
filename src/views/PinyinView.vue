@@ -1,17 +1,14 @@
 <template>
   <div class="pinyin-page">
     <div class="pinyin-container">
-      <!-- Top Hero Header -->
+      <!-- Top Hero Header (紧凑精简设计，最大化留出学习互动区) -->
       <section class="pinyin-hero">
         <div class="hero-left">
-          <div class="badge-row">
-            <span class="stage-chip">🎒 幼小衔接王牌课</span>
-            <span class="rule-chip">✨ 63个拼音全覆盖 · 纯正呼读音 · 趣味闯关</span>
+          <div class="title-with-badge">
+            <h1>🔤 汉语拼音启蒙乐园</h1>
+            <span class="stage-chip">🎒 幼小衔接王牌</span>
+            <span class="rule-chip">✨ 63个全覆盖 · 纯正呼读音</span>
           </div>
-          <h1>🔤 汉语拼音启蒙乐园</h1>
-          <p>
-            先从卡片墙<strong>点选想学的拼音</strong>，再跟着<strong>拍手顺口溜</strong>深度学习！<strong>四声调小火车、魔法拼读室、趣味闯关园</strong>全面覆盖全部 <strong>23 个声母、24 个韵母、16 个整体认读音节</strong>！
-          </p>
         </div>
 
         <div class="hero-stats-card">
@@ -19,14 +16,14 @@
             <span class="stat-icon">🔤</span>
             <div>
               <div class="stat-val">{{ pinyinLearnedCount }} <small>/ 63</small></div>
-              <div class="stat-lbl">已点亮拼音精灵</div>
+              <div class="stat-lbl">已掌握</div>
             </div>
           </div>
           <div class="stat-pill gold">
             <span class="stat-icon">⭐</span>
             <div>
               <div class="stat-val">{{ pinyinStars }}</div>
-              <div class="stat-lbl">拼音闯关星章</div>
+              <div class="stat-lbl">星章</div>
             </div>
           </div>
         </div>
@@ -1156,38 +1153,38 @@ onMounted(() => {
   gap: 20px;
 }
 
-/* Hero Banner */
+/* Hero Banner (紧凑精简) */
 .pinyin-hero {
   background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #ECFDF5 100%);
   border: 1px solid var(--border-subtle);
-  border-top: 4px solid #10B981;
-  border-radius: 22px;
-  padding: 22px 28px;
+  border-top: 3px solid #10B981;
+  border-radius: 16px;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
   box-shadow: var(--shadow-sm);
 }
 
 .hero-left {
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
 }
 
-.badge-row {
+.title-with-badge {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
 }
 
 .stage-chip,
 .rule-chip {
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
 }
 
@@ -1203,17 +1200,11 @@ onMounted(() => {
 }
 
 .pinyin-hero h1 {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: #0F172A;
-  letter-spacing: -0.3px;
-  margin-bottom: 6px;
-}
-
-.pinyin-hero p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #475569;
+  letter-spacing: -0.2px;
+  margin: 0;
 }
 
 .pinyin-hero p strong {

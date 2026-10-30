@@ -6,18 +6,15 @@
         <div class="poetry-top-row">
           <div class="hero-content">
             <div class="hero-tag-row">
-              <span class="hero-tag">📜 教育部统编版 · 小初高分级精编</span>
+              <h1>中华古诗词画卷</h1>
+              <span class="hero-tag">📜 统编版精编</span>
               <span class="stats-inline-pill">
-                📚 当前展示 <strong>{{ filteredPoems.length }}</strong> / {{ allPoems.length }} 首
+                📚 <strong>{{ filteredPoems.length }}</strong> / {{ allPoems.length }} 首
               </span>
               <span class="stats-inline-pill gold">
-                🏆 已学 <strong>{{ poetryLearnedCount }}</strong> 首 · 累计 <strong>{{ totalPoetryStars }} ⭐</strong>
+                🏆 已学 <strong>{{ poetryLearnedCount }}</strong> 首 ({{ totalPoetryStars }}⭐)
               </span>
             </div>
-            <h1>中华古诗词趣味画卷</h1>
-            <p>
-              一诗一画风，支持配乐感跟读、遮字盲背、创作背景解析与<strong>点字成诗、飞花令接龙、捉虫侦探、闯关问答</strong>四大互动游戏！
-            </p>
           </div>
 
           <!-- Stage Segmented Switcher + Random Challenge -->
@@ -336,30 +333,30 @@ function goRandomPoem() {
   gap: 20px;
 }
 
-/* Unified Command Card */
+/* Unified Command Card (紧凑精简) */
 .poetry-command-card {
   background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #FFFBEB 100%);
   border: 1px solid var(--border-subtle);
-  border-top: 4px solid #F59E0B;
-  border-radius: 22px;
-  padding: 22px 26px;
+  border-top: 3px solid #F59E0B;
+  border-radius: 16px;
+  padding: 12px 18px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   box-shadow: var(--shadow-sm);
 }
 
 .poetry-top-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: center;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .hero-content {
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
 }
 
 .hero-tag-row {
@@ -367,15 +364,15 @@ function goRandomPoem() {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .hero-tag {
   background: #D97706;
   color: #FFFFFF;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
 }
 
@@ -383,9 +380,9 @@ function goRandomPoem() {
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   color: #475569;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
 }
 
@@ -400,21 +397,11 @@ function goRandomPoem() {
 }
 
 .hero-content h1 {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: #0F172A;
-  letter-spacing: -0.3px;
-  margin-bottom: 4px;
-}
-
-.hero-content p {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: #475569;
-}
-
-.hero-content p strong {
-  color: #0F172A;
+  letter-spacing: -0.2px;
+  margin: 0;
 }
 
 /* Stage Segmented Control & Random Challenge */

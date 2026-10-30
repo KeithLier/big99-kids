@@ -873,6 +873,7 @@ function goBackList() {
 function goPrevPoem() {
   stopSpeech()
   playClickSound()
+  activeModuleTab.value = 'analysis'
   const idx = ALL_POEMS.findIndex(p => p.id === poem.value.id)
   const prevIdx = (idx - 1 + ALL_POEMS.length) % ALL_POEMS.length
   router.push(`/poetry/${ALL_POEMS[prevIdx].id}`)
@@ -881,6 +882,7 @@ function goPrevPoem() {
 function goNextPoem() {
   stopSpeech()
   playClickSound()
+  activeModuleTab.value = 'analysis'
   const idx = ALL_POEMS.findIndex(p => p.id === poem.value.id)
   const nextIdx = (idx + 1) % ALL_POEMS.length
   router.push(`/poetry/${ALL_POEMS[nextIdx].id}`)
@@ -891,6 +893,7 @@ watch(
   () => {
     stopSpeech()
     activeReadingLine.value = -1
+    activeModuleTab.value = 'analysis'
     resetQuiz()
     initGames()
   }

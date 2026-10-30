@@ -1,29 +1,39 @@
 <template>
   <div class="voice-settings-page">
     <div class="settings-container">
-      <!-- Top Hero Header -->
-      <section class="settings-hero">
+      <!-- Top Hero Header (紧凑精简版) -->
+      <section class="settings-hero compact-hero">
         <div class="hero-left">
           <div class="badge-row">
-            <span class="settings-badge">⚙️ 全站声音与音色设置中心</span>
+            <span class="settings-badge">⚙️ 声音与音色工坊</span>
             <span class="current-active-badge">
-              当前全站音源：<strong>{{ activeVoiceSummaryLabel }}</strong>
+              当前音源：<strong>{{ activeVoiceSummaryLabel }}</strong>
             </span>
           </div>
-          <h1>🔊 更换浏览器内置声音 & 🎙️ 录入专属音色</h1>
-          <p>
-            在这里，您可以<strong>自由试听并切换浏览器内置的多种中英文声音</strong>，或者<strong>直接录入您的一段话</strong>，让后面全站所有的拼音、英语、古诗词、乘法音频都使用您录入的音色播放！
-          </p>
+          <h1>🔊 更换内置中文声音 · 🎙️ 录入专属音色</h1>
         </div>
 
-        <div class="backup-actions-box">
-          <button type="button" class="backup-btn export-btn" @click="handleExportVoices">
-            📦 导出声音设置与录音备份
+        <div class="hero-right-tools">
+          <!-- 悬浮录音按钮控制开关 -->
+          <button
+            type="button"
+            class="floating-toggle-pill"
+            :class="{ hidden: voiceSettings.hideFloatingRecorder }"
+            @click="toggleFloatingRecorder"
+          >
+            <span class="ft-icon">{{ voiceSettings.hideFloatingRecorder ? '🙈' : '🎙️' }}</span>
+            <span class="ft-text">悬浮录音按钮：{{ voiceSettings.hideFloatingRecorder ? '已隐藏' : '已显示' }}</span>
           </button>
-          <label class="backup-btn import-btn">
-            📥 导入声音备份包
-            <input type="file" accept=".json" hidden @change="handleImportFile" />
-          </label>
+
+          <div class="backup-actions-box">
+            <button type="button" class="backup-btn export-btn" @click="handleExportVoices">
+              📦 导出备份
+            </button>
+            <label class="backup-btn import-btn">
+              📥 导入备份
+              <input type="file" accept=".json" hidden @change="handleImportFile" />
+            </label>
+          </div>
         </div>
       </section>
 
@@ -146,13 +156,14 @@
             </button>
           </div>
 
-          <div class="preview-inputs-grid">
+          <div class="preview-inputs-grid single-zh">
             <div class="preview-input-box">
               <div class="label-row">
-                <label>🇨🇳 中文试听语句（可自由修改）：</label>
+                <label>🇨🇳 中文试听语句（点击快捷样本或自由输入测试）：</label>
                 <div class="quick-sample-btns">
                   <button type="button" @click="zhPreviewText = '床前明月光，疑是地上霜。举头望明月，低头思故乡。'">📜 古诗</button>
                   <button type="button" @click="zhPreviewText = '波，右下半圆 波波波，拉开天线听广播！'">🔤 拼音</button>
+                  <button type="button" @click="zhPreviewText = '二七十四，三八二十四，四九三十六！'">✖️ 九九口诀</button>
                   <button type="button" @click="zhPreviewText = '答对啦！宝贝你真聪明，给你点亮一颗大金星！'">🎉 夸奖</button>
                 </div>
               </div>
@@ -163,27 +174,7 @@
                   class="mini-listen-btn"
                   @click="handlePreviewVoice(selectedZhVoiceObj?.voiceURI, zhPreviewText, 'zh-CN')"
                 >
-                  ▶️ 试听当前中文声音
-                </button>
-              </div>
-            </div>
-
-            <div class="preview-input-box">
-              <div class="label-row">
-                <label>🇬🇧 英文试听语句（可自由修改）：</label>
-                <div class="quick-sample-btns">
-                  <button type="button" @click="enPreviewText = 'Apple! A is for apple. Red and sweet!'">🍎 单词</button>
-                  <button type="button" @click="enPreviewText = 'Good morning Mommy! Let us play a fun game together!'">👨‍👩‍👧 对话</button>
-                </div>
-              </div>
-              <div class="input-with-btn">
-                <input v-model="enPreviewText" type="text" class="text-input" />
-                <button
-                  type="button"
-                  class="mini-listen-btn en"
-                  @click="handlePreviewVoice(selectedEnVoiceObj?.voiceURI, enPreviewText, 'en-US')"
-                >
-                  ▶️ 试听当前英文声音
+                  ▶️ 试听当前选中声音
                 </button>
               </div>
             </div>
@@ -229,32 +220,32 @@
           </div>
         </div>
 
-        <!-- Filter Bar for Browser Voices -->
+        <!-- Filter Bar for Chinese Voices (纯中文男女声) -->
         <div class="voices-filter-bar">
           <div class="lang-filter-pills">
             <button
               type="button"
               class="lf-pill"
-              :class="{ active: voiceLangFilter === 'zh' }"
-              @click="voiceLangFilter = 'zh'; playClickSound()"
+              :class="{ active: voiceGenderFilter === 'female' }"
+              @click="voiceGenderFilter = 'female'; playClickSound()"
             >
-              🇨🇳 中文内置声音 ({{ zhBrowserVoices.length }}个)
+              👩 中文女声 ({{ zhFemaleVoices.length }}个)
             </button>
             <button
               type="button"
               class="lf-pill"
-              :class="{ active: voiceLangFilter === 'en' }"
-              @click="voiceLangFilter = 'en'; playClickSound()"
+              :class="{ active: voiceGenderFilter === 'male' }"
+              @click="voiceGenderFilter = 'male'; playClickSound()"
             >
-              🇬🇧 英文内置声音 ({{ enBrowserVoices.length }}个)
+              👨 中文男声 ({{ zhMaleVoices.length }}个)
             </button>
             <button
               type="button"
               class="lf-pill"
-              :class="{ active: voiceLangFilter === 'all' }"
-              @click="voiceLangFilter = 'all'; playClickSound()"
+              :class="{ active: voiceGenderFilter === 'all' }"
+              @click="voiceGenderFilter = 'all'; playClickSound()"
             >
-              🌍 全部浏览器内置声音 ({{ browserVoices.length }}个)
+              🇨🇳 全部中文声音 ({{ zhBrowserVoices.length }}个)
             </button>
           </div>
 
@@ -740,6 +731,8 @@ const {
   voiceSettings,
   browserVoices,
   zhBrowserVoices,
+  zhFemaleVoices,
+  zhMaleVoices,
   enBrowserVoices,
   selectedZhVoiceObj,
   selectedEnVoiceObj,
@@ -780,29 +773,26 @@ const { showToast } = useKidsProfile()
 // 默认打开「更换浏览器内置声音」面板，若当前处于 my_timbre 模式则聚焦对应面板
 const activeTab = ref(voiceSettings.value.voiceEngineMode === 'my_timbre' ? 'my_timbre' : 'browser_voices')
 
-// ================= 1. 浏览器内置声音试听与选择逻辑 =================
-const voiceLangFilter = ref('zh')
-const previewingVoiceURI = ref('')
-const zhPreviewText = ref('床前明月光，疑是地上霜。小朋友今天表现真棒，我们一起学拼音吧！')
-const enPreviewText = ref("Hello sweetheart! Apple, A is for Apple. Let's play a game together!")
-
-const displayedBrowserVoices = computed(() => {
-  if (voiceLangFilter.value === 'zh') return zhBrowserVoices.value
-  if (voiceLangFilter.value === 'en') return enBrowserVoices.value
-  return browserVoices.value
-})
-
-function isEnglishVoice(v) {
-  return v.lang && v.lang.toLowerCase().startsWith('en')
+// 切换悬浮录音按钮显隐
+function toggleFloatingRecorder() {
+  playClickSound()
+  const nextVal = !voiceSettings.value.hideFloatingRecorder
+  saveVoiceSettings({ hideFloatingRecorder: nextVal })
+  showToast(nextVal ? '🙈 已隐藏右下角悬浮录音按钮' : '👀 已显示右下角悬浮录音按钮')
 }
 
+// ================= 1. 浏览器内置中文声音试听与选择逻辑 =================
+const voiceGenderFilter = ref('female') // 'female' | 'male' | 'all'
+const previewingVoiceURI = ref('')
+const zhPreviewText = ref('床前明月光，疑是地上霜。小朋友今天表现真棒，我们一起学拼音吧！')
+
+const displayedBrowserVoices = computed(() => {
+  if (voiceGenderFilter.value === 'female') return zhFemaleVoices.value
+  if (voiceGenderFilter.value === 'male') return zhMaleVoices.value
+  return zhBrowserVoices.value
+})
+
 function isVoiceSelected(v) {
-  if (isEnglishVoice(v)) {
-    return (
-      voiceSettings.value.selectedEnVoiceURI === v.voiceURI ||
-      selectedEnVoiceObj.value?.voiceURI === v.voiceURI
-    )
-  }
   return (
     voiceSettings.value.selectedZhVoiceURI === v.voiceURI ||
     selectedZhVoiceObj.value?.voiceURI === v.voiceURI
@@ -810,13 +800,13 @@ function isVoiceSelected(v) {
 }
 
 function getVoiceAvatar(v) {
-  if (v.genderHint === 'kid') return '🧒'
   if (v.genderHint === 'male') return '👨'
   if (v.genderHint === 'female') return '👩'
-  return isEnglishVoice(v) ? '🇬🇧' : '🇨🇳'
+  if (v.genderHint === 'kid') return '🧒'
+  return '🇨🇳'
 }
 
-function handlePreviewVoice(voiceURI, text, lang) {
+function handlePreviewVoice(voiceURI, text, lang = 'zh-CN') {
   if (!voiceURI) {
     speakSystemOnly(text, lang)
     return
@@ -826,31 +816,20 @@ function handlePreviewVoice(voiceURI, text, lang) {
 }
 
 function handlePreviewCardVoice(v) {
-  const isEn = isEnglishVoice(v)
-  const sample = isEn ? enPreviewText.value : zhPreviewText.value
-  const lang = v.lang || (isEn ? 'en-US' : 'zh-CN')
+  const sample = zhPreviewText.value
+  const lang = v.lang || 'zh-CN'
   previewingVoiceURI.value = v.voiceURI
   previewBrowserVoice(v.voiceURI, sample, lang)
 }
 
 function handleSelectBrowserVoice(v) {
   playSuccessSound()
-  const isEn = isEnglishVoice(v)
-  if (isEn) {
-    saveVoiceSettings({
-      voiceEngineMode: 'browser',
-      selectedEnVoiceURI: v.voiceURI
-    })
-    showToast(`✅ 已将全站英文发音切换为：【${v.friendlyName}】`)
-    handlePreviewVoice(v.voiceURI, enPreviewText.value, v.lang || 'en-US')
-  } else {
-    saveVoiceSettings({
-      voiceEngineMode: 'browser',
-      selectedZhVoiceURI: v.voiceURI
-    })
-    showToast(`✅ 已将全站中文发音切换为：【${v.friendlyName}】`)
-    handlePreviewVoice(v.voiceURI, zhPreviewText.value, v.lang || 'zh-CN')
-  }
+  saveVoiceSettings({
+    voiceEngineMode: 'browser',
+    selectedZhVoiceURI: v.voiceURI
+  })
+  showToast(`✅ 已将全站中文发音切换为：【${v.friendlyName}】`)
+  handlePreviewVoice(v.voiceURI, zhPreviewText.value, v.lang || 'zh-CN')
 }
 
 function updateRatePitch(field, val) {
@@ -1219,19 +1198,63 @@ onMounted(() => {
   background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #F5F3FF 100%);
   border: 1px solid var(--border-subtle);
   border-top: 4px solid #8B5CF6;
-  border-radius: 22px;
-  padding: 22px 28px;
+  border-radius: 20px;
+  padding: 16px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
   box-shadow: var(--shadow-sm);
 }
 
+.compact-hero {
+  padding: 14px 20px;
+}
+
+.compact-hero h1 {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0F172A;
+  margin: 0;
+}
+
+.hero-right-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.floating-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  color: #3730A3;
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.floating-toggle-pill:hover {
+  background: #E0E7FF;
+  transform: translateY(-1px);
+}
+
+.floating-toggle-pill.hidden {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #64748B;
+}
+
 .hero-left {
   flex: 1;
-  min-width: 280px;
+  min-width: 260px;
 }
 
 .badge-row {
@@ -1523,6 +1546,10 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+.preview-inputs-grid.single-zh {
+  grid-template-columns: 1fr;
 }
 
 .preview-input-box {

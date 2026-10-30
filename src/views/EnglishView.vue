@@ -1,47 +1,32 @@
 <template>
   <div class="english-page">
     <div class="english-container">
-      <!-- Top Hero Banner -->
+      <!-- Top Hero Banner (紧凑精简设计) -->
       <section class="english-hero">
         <div class="hero-left">
-          <div class="badge-row">
-            <span class="stage-chip">🎡 幼小衔接英语启蒙</span>
-            <span class="rule-chip">👨‍👩‍👧 亲子情景共学 · 自然拼读 · 趣味闯关</span>
+          <div class="title-with-badge">
+            <h1>🌈 快乐英语启蒙乐园</h1>
+            <span class="stage-chip">🎡 幼小衔接英语</span>
+            <span class="rule-chip">👨‍👩‍👧 亲子共学 · 自然拼读</span>
           </div>
-          <h1>🌈 快乐英语启蒙乐园 (English Wonderland)</h1>
-          <p>
-            认识 <strong>26 个英文字母 (Aa~Zz)</strong> 与 <strong>8 大日常主题单词</strong>，特别配备<strong>「👨‍👩‍👧 亲子双角色情景对话剧场」</strong>，让爸爸妈妈和宝贝在家也能用英语开心互动！
-          </p>
         </div>
 
-        <div class="hero-stats-grid">
-          <div class="e-stat-card">
+        <div class="hero-stats-row">
+          <div class="e-stat-pill">
             <span class="e-stat-icon">🔤</span>
-            <div>
-              <div class="e-stat-num">{{ englishLettersCount }}<small>/26</small></div>
-              <div class="e-stat-lbl">已学字母</div>
-            </div>
+            <span class="e-stat-num">{{ englishLettersCount }}<small>/26</small></span>
           </div>
-          <div class="e-stat-card">
+          <div class="e-stat-pill">
             <span class="e-stat-icon">🍎</span>
-            <div>
-              <div class="e-stat-num">{{ englishWordsCount }}<small>/56</small></div>
-              <div class="e-stat-lbl">日常单词</div>
-            </div>
+            <span class="e-stat-num">{{ englishWordsCount }}<small>/56</small></span>
           </div>
-          <div class="e-stat-card pink">
+          <div class="e-stat-pill pink">
             <span class="e-stat-icon">👨‍👩‍👧</span>
-            <div>
-              <div class="e-stat-num">{{ englishScenesCount }}<small>/6</small></div>
-              <div class="e-stat-lbl">亲子剧场</div>
-            </div>
+            <span class="e-stat-num">{{ englishScenesCount }}<small>/6</small></span>
           </div>
-          <div class="e-stat-card gold">
+          <div class="e-stat-pill gold">
             <span class="e-stat-icon">🌟</span>
-            <div>
-              <div class="e-stat-num">{{ englishStars }}</div>
-              <div class="e-stat-lbl">英语金星</div>
-            </div>
+            <span class="e-stat-num">{{ englishStars }}</span>
           </div>
         </div>
       </section>
@@ -889,39 +874,39 @@ onMounted(() => {
   gap: 22px;
 }
 
-/* Hero Banner */
+/* Top Hero Banner (紧凑精简) */
 .english-hero {
   background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, #FFF1F2 100%);
   border: 1px solid var(--border-subtle);
-  border-top: 4px solid #F43F5E;
-  border-radius: 22px;
-  padding: 22px 28px;
+  border-top: 3px solid #F43F5E;
+  border-radius: 16px;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
   box-shadow: var(--shadow-sm);
 }
 
 .hero-left {
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
 }
 
-.badge-row {
+.title-with-badge {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
 }
 
 .stage-chip {
   background: #E11D48;
   color: #FFFFFF;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
 }
 
@@ -929,77 +914,62 @@ onMounted(() => {
   background: #FFF1F2;
   color: #BE123C;
   border: 1px solid #FECDD3;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
 }
 
 .english-hero h1 {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: #0F172A;
-  letter-spacing: -0.3px;
-  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+  margin: 0;
 }
 
-.english-hero p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #475569;
-}
-
-.english-hero p strong {
-  color: #0F172A;
-}
-
-.hero-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.e-stat-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 10px 14px;
+.hero-stats-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 138px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.e-stat-pill {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 99px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   box-shadow: var(--shadow-xs);
 }
 
-.e-stat-card.pink {
+.e-stat-pill.pink {
   border-color: #FECDD3;
   background: #FFF1F2;
 }
 
-.e-stat-card.gold {
+.e-stat-pill.gold {
   border-color: #FDE68A;
   background: #FFFBEB;
 }
 
 .e-stat-icon {
-  font-size: 24px;
+  font-size: 16px;
 }
 
 .e-stat-num {
-  font-size: 19px;
+  font-size: 14px;
   font-weight: 900;
   color: #0F172A;
 }
 
 .e-stat-num small {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #64748B;
-}
-
-.e-stat-lbl {
-  font-size: 11.5px;
   font-weight: 700;
-  color: #64748B;
 }
 
 /* Mode Tabs */

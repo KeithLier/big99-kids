@@ -2498,7 +2498,7 @@ onBeforeUnmount(() => {
       background: transparent;
       min-height: 100vh;
       min-height: 100dvh;
-      padding: 16px 12px 40px;
+      padding: 8px 10px 30px;
       color: var(--text-dark);
       overflow-x: hidden;
       display: flex;
@@ -2550,7 +2550,7 @@ onBeforeUnmount(() => {
       justify-content: flex-start;
     }
 
-    /* Outer Poster Frame */
+    /* Outer Poster Frame (精简紧凑内边距) */
     .poster-frame {
       width: 1320px;
       height: fit-content;
@@ -2558,9 +2558,9 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
-      border-top: 5px solid #0EA5E9;
-      border-radius: 24px;
-      padding: 16px 20px 22px;
+      border-top: 4px solid #0EA5E9;
+      border-radius: 20px;
+      padding: 10px 14px 16px;
       box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
       position: relative;
       transform-origin: top center;
@@ -2728,34 +2728,34 @@ onBeforeUnmount(() => {
       font-size: 12px;
     }
 
-    /* Header Title Blocks */
+    /* Header Title Blocks (紧凑字块) */
     .poster-header {
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
-      margin-bottom: 8px;
-      padding: 2px 0;
+      margin-bottom: 6px;
+      padding: 1px 0;
     }
 
     .title-blocks {
       display: flex;
-      gap: 10px;
+      gap: 6px;
     }
 
     .title-char {
-      width: 56px;
-      height: 58px;
+      width: 40px;
+      height: 42px;
       background: var(--title-red);
       color: #fff;
-      font-size: 36px;
+      font-size: 24px;
       font-weight: 900;
-      border-radius: 13px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 0 #b51f1c, 0 6px 14px rgba(229, 50, 46, 0.26);
-      letter-spacing: 2px;
+      box-shadow: 0 3px 0 #b51f1c, 0 4px 10px rgba(229, 50, 46, 0.2);
+      letter-spacing: 1px;
       transition: transform 0.15s;
       cursor: pointer;
     }
@@ -2766,10 +2766,10 @@ onBeforeUnmount(() => {
 
     .shooting-star-deco {
       position: absolute;
-      right: 28px;
+      right: 20px;
       top: -4px;
-      width: 96px;
-      height: 64px;
+      width: 72px;
+      height: 48px;
       pointer-events: none;
     }
 

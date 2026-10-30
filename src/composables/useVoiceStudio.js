@@ -67,6 +67,10 @@ const DEFAULT_SETTINGS = {
   selectedEnVoiceURI: '',
   browserRate: 0.92,
   browserPitch: 1.05,
+  selectedGender: 'female', // 'female' | 'male'
+
+  // 右下角悬浮录音按钮显示与隐藏
+  hideFloatingRecorder: false,
 
   // 「录入我的一段话」个人声纹音色配置
   timbreSampleText: '嗨宝贝，我是最爱你的爸爸妈妈！今天我们一起开心地学拼音、读英语、背古诗吧，你一定是最棒的！',
@@ -499,40 +503,71 @@ export function useVoiceStudio() {
     } catch (e) {}
   }
 
-  // 分类后的浏览器中文声音列表
+  // 严格只筛选支持中文的声音（过滤掉所有英文和其他外语发音人）
   const zhBrowserVoices = computed(() => {
-    const list = browserVoices.value.filter(
-      v =>
-        v.lang.toLowerCase().includes('zh') ||
-        v.lang.toLowerCase().includes('cmn') ||
-        v.lang.toLowerCase().includes('yue') ||
-        /chinese|普通话|国语|國語|粤语|粵語|ting|meijia|xiaoxiao|yunxi|huihui|kangkang/i.test(v.name)
-    )
-    return list.length > 0 ? list : browserVoices.value
+    return browserVoices.value.filter(v => {
+      const lang = (v.lang || '').toLowerCase()
+      const name = (v.name || '').toLowerCase()
+      // 必须是明确的中文语言代码，或名字带明确中文标识
+      const isZhLang = lang.includes('zh') || lang.includes('cmn') || lang.includes('yue')
+      const isZhName = /chinese|普通话|国语|國語|粤语|粵語|ting|meijia|xiaoxiao|yunxi|yunjian|yunyang|kangkang|wanlung|lili|huihui|yaoyao|xiaoyi/i.test(name)
+      return isZhLang || isZhName
+    })
   })
 
-  // 分类后的浏览器英文声音列表
-  const enBrowserVoices = computed(() => {
-    const list = browserVoices.value.filter(
-      v => v.lang.toLowerCase().startsWith('en') || /english|samantha|ava|daniel|karen|alex|victoria|jenny/i.test(v.name)
-    )
-    return list.length > 0 ? list : browserVoices.value
+  // 中文女声列表（温柔妈妈、亲切少儿绘本女老师）
+  const zhFemaleVoices = computed(() => {
+    const list = zhBrowserVoices.value.filter(v => v.genderHint !== 'male')
+    // 若系统检测到有女声则返回，否则提供系统默认女声配置
+    if (list.length > 0) return list
+    if (zhBrowserVoices.value.length > 0) {
+      return [{
+        ...zhBrowserVoices.value[0],
+        friendlyName: '标准中文女声 (系统内置)',
+        genderHint: 'female',
+        tag: '温柔清晰普通话 · 推荐'
+      }]
+    }
+    return [{
+      voiceURI: '__default_zh_female__',
+      name: '系统标准中文女声',
+      lang: 'zh-CN',
+      localService: true,
+      default: true,
+      friendlyName: '温柔中文女声 (系统推荐)',
+      tag: '自然亲切 · 适合伴读',
+      genderHint: 'female'
+    }]
+  })
+
+  // 中文男声列表（阳光哥哥、沉稳爸爸）
+  const zhMaleVoices = computed(() => {
+    const list = zhBrowserVoices.value.filter(v => v.genderHint === 'male')
+    if (list.length > 0) return list
+    // 若系统声音中未自带独立男声，利用主中文语音结合声学基频调制构建男声音色
+    const base = zhBrowserVoices.value[0] || {
+      voiceURI: '__default_zh_male__',
+      name: '系统标准中文男声',
+      lang: 'zh-CN',
+      localService: true
+    }
+    return [{
+      ...base,
+      voiceURI: base.voiceURI ? `${base.voiceURI}__male_mod` : '__default_zh_male__',
+      friendlyName: '沉稳中文男声 (声纹调制)',
+      tag: '阳光磁性 · 爸爸声线',
+      genderHint: 'male',
+      isModulatedMale: true
+    }]
   })
 
   const selectedZhVoiceObj = computed(() => {
     const uri = voiceSettings.value.selectedZhVoiceURI
+    const all = [...zhFemaleVoices.value, ...zhMaleVoices.value]
     return (
-      zhBrowserVoices.value.find(v => v.voiceURI === uri || v.name === uri) ||
-      zhBrowserVoices.value[0] ||
-      null
-    )
-  })
-
-  const selectedEnVoiceObj = computed(() => {
-    const uri = voiceSettings.value.selectedEnVoiceURI
-    return (
-      enBrowserVoices.value.find(v => v.voiceURI === uri || v.name === uri) ||
-      enBrowserVoices.value[0] ||
+      all.find(v => v.voiceURI === uri || v.name === uri) ||
+      zhFemaleVoices.value[0] ||
+      all[0] ||
       null
     )
   })
@@ -953,7 +988,8 @@ export function useVoiceStudio() {
     voiceSettings,
     browserVoices,
     zhBrowserVoices,
-    enBrowserVoices,
+    zhFemaleVoices,
+    zhMaleVoices,
     selectedZhVoiceObj,
     selectedEnVoiceObj,
     activeVoiceSummaryLabel,
