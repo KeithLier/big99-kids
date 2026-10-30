@@ -144,8 +144,8 @@ export function useSound() {
 
         if (!targetVoice) {
           targetVoice =
-            voices.find(v => v.lang.includes('zh-CN') && (v.name.includes('Ting') || v.name.includes('Meijia') || v.name.includes('Xiaoxiao'))) ||
-            voices.find(v => v.lang.includes('zh') || v.lang.includes('cmn')) ||
+            voices.find(v => (v.lang || '').includes('zh-CN') && ((v.name || '').includes('Ting') || (v.name || '').includes('Meijia') || (v.name || '').includes('Xiaoxiao'))) ||
+            voices.find(v => (v.lang || '').includes('zh') || (v.lang || '').includes('cmn')) ||
             voices[0]
         }
       }

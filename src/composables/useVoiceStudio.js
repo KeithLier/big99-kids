@@ -483,8 +483,23 @@ function blobToBase64(blob) {
 }
 
 async function base64ToBlob(dataUrl) {
-  const res = await fetch(dataUrl)
-  return await res.blob()
+  try {
+    const res = await fetch(dataUrl)
+    return await res.blob()
+  } catch (err) {
+    // 针对 Safari / 限制性移动 WebView 降级处理
+    const parts = (dataUrl || '').split(',')
+    if (parts.length < 2) return new Blob([], { type: 'audio/webm' })
+    const mimeMatch = parts[0].match(/:(.*?);/)
+    const mime = mimeMatch ? mimeMatch[1] : 'audio/webm'
+    const bstr = atob(parts[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    return new Blob([u8arr], { type: mime })
+  }
 }
 
 export function useVoiceStudio() {
@@ -568,6 +583,20 @@ export function useVoiceStudio() {
       all.find(v => v.voiceURI === uri || v.name === uri) ||
       zhFemaleVoices.value[0] ||
       all[0] ||
+      null
+    )
+  })
+
+  // 英文发音人列表与选中对象（保留定义，保证调用方解构健壮性）
+  const enBrowserVoices = computed(() => {
+    return browserVoices.value.filter(v => (v.lang || '').toLowerCase().startsWith('en'))
+  })
+
+  const selectedEnVoiceObj = computed(() => {
+    const uri = voiceSettings.value.selectedEnVoiceURI
+    return (
+      enBrowserVoices.value.find(v => v.voiceURI === uri || v.name === uri) ||
+      enBrowserVoices.value[0] ||
       null
     )
   })
@@ -990,6 +1019,7 @@ export function useVoiceStudio() {
     zhBrowserVoices,
     zhFemaleVoices,
     zhMaleVoices,
+    enBrowserVoices,
     selectedZhVoiceObj,
     selectedEnVoiceObj,
     activeVoiceSummaryLabel,
