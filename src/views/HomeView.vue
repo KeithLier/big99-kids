@@ -150,10 +150,10 @@
                       <h3>快乐英语启蒙乐园</h3>
                       <span class="course-badge english-badge">亲子双角互动</span>
                     </div>
-                    <p class="course-meta">26字母自然拼读 · 160个主题词 · 6大亲子情景剧</p>
+                    <p class="course-meta">26字母自然拼读 · 160个主题词 · 12大亲子情景剧</p>
                   </div>
                 </div>
-                <span class="progress-tag english-tag">已学 {{ englishLettersCount }} 字母 · {{ englishWordsCount }}/160 词</span>
+                <span class="progress-tag english-tag">已学 {{ englishLettersCount }} 字母 · {{ englishScenesCount }}/12 剧场</span>
               </div>
 
               <p class="card-desc">

@@ -22,7 +22,7 @@
           </div>
           <div class="e-stat-pill pink">
             <span class="e-stat-icon">👨‍👩‍👧</span>
-            <span class="e-stat-num">{{ englishScenesCount }}<small>/6</small></span>
+            <span class="e-stat-num">{{ englishScenesCount }}<small>/{{ PARENT_KID_SCENES.length }}</small></span>
           </div>
           <div class="e-stat-pill gold">
             <span class="e-stat-icon">🌟</span>

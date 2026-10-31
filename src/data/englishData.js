@@ -514,6 +514,294 @@ export const PARENT_KID_SCENES = [
         actionTip: '🤗 给爸爸妈妈一个温暖的晚安拥抱'
       }
     ]
+  },
+  {
+    id: 'scene_school',
+    title: '背上书包上学去',
+    enTitle: 'First Day of School',
+    icon: '🎒',
+    themeBg: 'linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%)',
+    borderColor: '#43a047',
+    parentTip: '💡 家长锦囊：早上出发去学校前，和孩子一起检查书包里的文具。用 "Do you have your..." 句型引导孩子自主检查书包，培养自理好习惯。',
+    keyPhrases: ['Ready for school? (准备好上学了吗)', 'In my schoolbag. (在我的书包里)', 'Have a great day! (祝你今天过得开心)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Good morning! Are you ready for school today?',
+        slowWords: ['Good', 'morning!', 'Are', 'you', 'ready', 'for', 'school', 'today?'],
+        cn: '早上好！今天准备好去学校了吗？',
+        actionTip: '🎒 帮宝贝提起整理好的小书包'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Yes! I have my book, pencils and eraser in my schoolbag!',
+        slowWords: ['Yes!', 'I', 'have', 'my', 'book,', 'pencils', 'and', 'eraser', 'in', 'my', 'schoolbag!'],
+        cn: '准备好啦！我的书本、铅笔和橡皮都在书包里！',
+        actionTip: '✏️ 拍拍书包侧袋，满脸自信与期待'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Wonderful! Listen to your teacher and be kind to classmates!',
+        slowWords: ['Wonderful!', 'Listen', 'to', 'your', 'teacher', 'and', 'be', 'kind', 'to', 'classmates!'],
+        cn: '太棒了！上课认真听老师讲，和小朋友友好相处哦！',
+        actionTip: '👍 竖起大拇指鼓励宝贝'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'I will! Goodbye Daddy, see you after school!',
+        slowWords: ['I', 'will!', 'Goodbye', 'Daddy,', 'see', 'you', 'after', 'school!'],
+        cn: '我会的！爸爸再见，放学见！',
+        actionTip: '👋 欢快地挥手迈步走向校园'
+      }
+    ]
+  },
+  {
+    id: 'scene_park',
+    title: '公园大自然探险',
+    enTitle: 'Nature Adventure in Park',
+    icon: '🌳',
+    themeBg: 'linear-gradient(135deg, #e0f2f1 0%, #80cbc4 100%)',
+    borderColor: '#00897b',
+    parentTip: '💡 家长锦囊：在公园散步或草地上奔跑时，引导孩子观察身边的花草树木和天气。用五感观察大自然，激发英语表达欲。',
+    keyPhrases: ['Look at the green grass. (看那片绿草)', 'Smell the flowers. (闻闻花香)', 'The sky is so blue. (天空真蓝)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'What a sunny day! The park is so beautiful!',
+        slowWords: ['What', 'a', 'sunny', 'day!', 'The', 'park', 'is', 'so', 'beautiful!'],
+        cn: '今天天气真好呀！公园里太漂亮啦！',
+        actionTip: '🌳 张开双臂深呼吸大自然的新鲜空气'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Look! Pink flowers, green trees and singing birds!',
+        slowWords: ['Look!', 'Pink', 'flowers,', 'green', 'trees', 'and', 'singing', 'birds!'],
+        cn: '快看！粉色的花朵、大绿树，还有唱歌的小鸟！',
+        actionTip: '🌺 蹲下来轻轻闻一闻路边的小花'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'Can you see the white clouds in the blue sky?',
+        slowWords: ['Can', 'you', 'see', 'the', 'white', 'clouds', 'in', 'the', 'blue', 'sky?'],
+        cn: '你能看到蓝天上一朵朵棉花糖般的白云吗？',
+        actionTip: '☁️ 抬头用手指指向天上的云彩'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Yes! That cloud looks like a fluffy white sheep!',
+        slowWords: ['Yes!', 'That', 'cloud', 'looks', 'like', 'a', 'fluffy', 'white', 'sheep!'],
+        cn: '能看到！那朵云就像一只毛茸茸的白色小绵羊！',
+        actionTip: '🐑 咯咯笑着比划绵羊圆圆的模样'
+      }
+    ]
+  },
+  {
+    id: 'scene_traffic',
+    title: '安全出行与红绿灯',
+    enTitle: 'Traffic Safety & Vehicles',
+    icon: '🚦',
+    themeBg: 'linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)',
+    borderColor: '#fb8c00',
+    parentTip: '💡 家长锦囊：过马路或在街头等红绿灯时，教孩子唱出经典的交通安全童谣："Red light, stop! Green light, go!"，同时观察路上的警车、公交车。',
+    keyPhrases: ['Red light, stop! (红灯停)', 'Green light, go! (绿灯行)', 'Watch out for cars. (当心车辆)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Wait, sweetheart! The traffic light is red now.',
+        slowWords: ['Wait,', 'sweetheart!', 'The', 'traffic', 'light', 'is', 'red', 'now.'],
+        cn: '等一等，小宝贝！现在的交通信号灯是红灯哦。',
+        actionTip: '🛑 伸出小手挡在宝贝身前，停下脚步'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'I remember! Red light stop, yellow light wait!',
+        slowWords: ['I', 'remember!', 'Red', 'light', 'stop,', 'yellow', 'light', 'wait!'],
+        cn: '我记得！红灯停，黄灯等一等！',
+        actionTip: '🚦 站得笔直，指着高处的信号灯'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Now it turns green! Let us hold hands and cross the street.',
+        slowWords: ['Now', 'it', 'turns', 'green!', 'Let', 'us', 'hold', 'hands', 'and', 'cross', 'the', 'street.'],
+        cn: '现在变成绿灯啦！我们手牵手走过斑马线吧。',
+        actionTip: '🤝 紧紧牵住宝贝的手左右看'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Green light, go! Look, a big yellow school bus is passing by!',
+        slowWords: ['Green', 'light,', 'go!', 'Look,', 'a', 'big', 'yellow', 'school', 'bus', 'is', 'passing', 'by!'],
+        cn: '绿灯行！看，一辆黄色大校车开过去啦！',
+        actionTip: '🚌 兴奋地向校车上的小朋友招手'
+      }
+    ]
+  },
+  {
+    id: 'scene_birthday',
+    title: '快乐生日与数字派对',
+    enTitle: 'Happy Birthday Party',
+    icon: '🎂',
+    themeBg: 'linear-gradient(135deg, #fce4ec 0%, #f48fb1 100%)',
+    borderColor: '#ec407a',
+    parentTip: '💡 家长锦囊：在孩子或家人生日时，数蜡烛、切蛋糕、分果汁是练习数字和礼貌用语的绝佳场景。让孩子大声唱 "Happy Birthday"！',
+    keyPhrases: ['Happy birthday! (生日快乐)', 'Make a wish. (许个心愿吧)', 'How many candles? (有多少支蜡烛)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'Happy birthday, my big boy/girl! Here is your sweet cake!',
+        slowWords: ['Happy', 'birthday,', 'my', 'big', 'kid!', 'Here', 'is', 'your', 'sweet', 'cake!'],
+        cn: '宝贝生日快乐！看，这是为你准备的美味大蛋糕！',
+        actionTip: '🎂 双手端上插着蜡烛的生日蛋糕'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Wow, thank you! It has red strawberries and sweet chocolate!',
+        slowWords: ['Wow,', 'thank', 'you!', 'It', 'has', 'red', 'strawberries', 'and', 'sweet', 'chocolate!'],
+        cn: '哇，谢谢爸爸妈妈！上面有红草莓和甜巧克力！',
+        actionTip: '🎉 拍着小手开心地跳起来'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'How many candles on the cake? Let us count together!',
+        slowWords: ['How', 'many', 'candles', 'on', 'the', 'cake?', 'Let', 'us', 'count', 'together!'],
+        cn: '蛋糕上有几支蜡烛呀？我们一起来数一数吧！',
+        actionTip: '🕯️ 伸出手指一根一根数'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'One, two, three, four, five, six! Six candles! Time to blow!',
+        slowWords: ['One,', 'two,', 'three,', 'four,', 'five,', 'six!', 'Six', 'candles!', 'Time', 'to', 'blow!'],
+        cn: '一、二、三、四、五、六！六支蜡烛！呼～吹蜡烛啦！',
+        actionTip: '💨 鼓起腮帮子用力吹灭生日蜡烛'
+      }
+    ]
+  },
+  {
+    id: 'scene_pet',
+    title: '和萌宠小狗做游戏',
+    enTitle: 'Fun Time with Puppy',
+    icon: '🐶',
+    themeBg: 'linear-gradient(135deg, #fffde7 0%, #fff59d 100%)',
+    borderColor: '#fbc02d',
+    parentTip: '💡 家长锦囊：引导孩子和家里的宠物（或玩具小狗）互动，练习 "Good dog!"、"Fetch the ball!" 等动感短句，培养孩子的爱心与责任感。',
+    keyPhrases: ['Good puppy! (好小狗)', 'Fetch the ball! (去捡球吧)', 'Wag the tail. (摇尾巴)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Look at our puppy Lucky! It is wagging its tail happily!',
+        slowWords: ['Look', 'at', 'our', 'puppy', 'Lucky!', 'It', 'is', 'wagging', 'its', 'tail', 'happily!'],
+        cn: '看我们家的小狗多欢快！它正开心地摇尾巴呢！',
+        actionTip: '🐶 指向欢快蹦跳的小狗'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Here, puppy! Catch the red ball! Go, run fast!',
+        slowWords: ['Here,', 'puppy!', 'Catch', 'the', 'red', 'ball!', 'Go,', 'run', 'fast!'],
+        cn: '来呀小狗！接住这个红色球！去吧，快跑！',
+        actionTip: '🎾 做出用力扔小球的帅气动作'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👨',
+        en: 'Good job! The puppy brings the ball back to you!',
+        slowWords: ['Good', 'job!', 'The', 'puppy', 'brings', 'the', 'ball', 'back', 'to', 'you!'],
+        cn: '太棒啦！小狗把球咬回来交给你啦！',
+        actionTip: '👏 鼓掌赞扬小狗和宝贝配合默契'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Good boy! You are my best and cutest furry friend!',
+        slowWords: ['Good', 'boy!', 'You', 'are', 'my', 'best', 'and', 'cutest', 'furry', 'friend!'],
+        cn: '好孩子！你是我最好、最可爱的小萌宠朋友！',
+        actionTip: '🤗 蹲下身轻轻抚摸小狗毛茸茸的小脑袋'
+      }
+    ]
+  },
+  {
+    id: 'scene_farm',
+    title: '快乐农场小帮手',
+    enTitle: 'Happy Farm Helpers',
+    icon: '🚜',
+    themeBg: 'linear-gradient(135deg, #f1f8e9 0%, #c5e1a5 100%)',
+    borderColor: '#7cb342',
+    parentTip: '💡 家长锦囊：结合农场场景，模仿牛、羊、鸭、马的叫声（Moo, Baa, Quack, Neigh），让孩子在欢声笑语中牢牢记住农场动物和载具单词。',
+    keyPhrases: ['Welcome to the farm! (欢迎来到农场)', 'The cow says moo. (奶牛哞哞叫)', 'A green tractor! (绿色的拖拉机)'],
+    dialogues: [
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'Welcome to the sunny farm! Hear the rooster crowing?',
+        slowWords: ['Welcome', 'to', 'the', 'sunny', 'farm!', 'Hear', 'the', 'rooster', 'crowing?'],
+        cn: '欢迎来到阳光农场！听到公鸡喔喔叫了吗？',
+        actionTip: '🚜 指向远处广阔的大农场'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Yes! Look at the black and white cows! Moo, moo!',
+        slowWords: ['Yes!', 'Look', 'at', 'the', 'black', 'and', 'white', 'cows!', 'Moo,', 'moo!'],
+        cn: '听到了！看那边的黑白花奶牛！哞～哞～！',
+        actionTip: '🐮 做出可爱小牛角的动作学牛叫'
+      },
+      {
+        role: 'parent',
+        speaker: '爸爸/妈妈',
+        avatar: '👩',
+        en: 'And what is running in the field? It is a green tractor!',
+        slowWords: ['And', 'what', 'is', 'running', 'in', 'the', 'field?', 'It', 'is', 'a', 'green', 'tractor!'],
+        cn: '那片田野里开着什么机器呢？是一辆绿色拖拉机！',
+        actionTip: '🚜 模仿双手握大方向盘开拖拉机'
+      },
+      {
+        role: 'kid',
+        speaker: '小宝贝',
+        avatar: '🧒',
+        en: 'Chug-chug! Farm life is so exciting and fun!',
+        slowWords: ['Chug-chug!', 'Farm', 'life', 'is', 'so', 'exciting', 'and', 'fun!'],
+        cn: '突突突！农场的生活真是太精彩、太好玩啦！',
+        actionTip: '🌾 开心地举起小手转圈圈'
+      }
+    ]
   }
 ]
 
@@ -526,15 +814,15 @@ export const ENGLISH_GAMES = {
     ['M', 'N', 'O', 'P', 'Q', 'R'],
     ['S', 'T', 'U', 'V', 'W', 'Z']
   ],
-  // 游戏2：听音摘果子（听英文选图案）
+  // 游戏2：听音摘果子（听英文选图案，覆盖全部8大主题）
   wordListenQuiz: [
-    { id: 'ewq1', word: 'Apple', cn: '红苹果', speak: 'Apple! Find the red apple!', answer: 'Apple', options: [
+    { id: 'ewq1', word: 'Apple', cn: '红苹果', speak: 'Apple! Find the sweet red apple!', answer: 'Apple', options: [
       { word: 'Apple', cn: '苹果', emoji: '🍎' },
       { word: 'Banana', cn: '香蕉', emoji: '🍌' },
       { word: 'Watermelon', cn: '西瓜', emoji: '🍉' },
       { word: 'Strawberry', cn: '草莓', emoji: '🍓' }
     ]},
-    { id: 'ewq2', word: 'Panda', cn: '大熊猫', speak: 'Panda! Where is the cute panda?', answer: 'Panda', options: [
+    { id: 'ewq2', word: 'Panda', cn: '大熊猫', speak: 'Panda! Where is the cute giant panda?', answer: 'Panda', options: [
       { word: 'Tiger', cn: '老虎', emoji: '🐯' },
       { word: 'Panda', cn: '大熊猫', emoji: '🐼' },
       { word: 'Rabbit', cn: '小兔', emoji: '🐰' },
@@ -546,7 +834,7 @@ export const ENGLISH_GAMES = {
       { word: 'Rainbow', cn: '彩虹', emoji: '🌈' },
       { word: 'Star', cn: '星星', emoji: '⭐' }
     ]},
-    { id: 'ewq4', word: 'Schoolbag', cn: '小书包', speak: 'Schoolbag! Pack your schoolbag!', answer: 'Schoolbag', options: [
+    { id: 'ewq4', word: 'Schoolbag', cn: '小书包', speak: 'Schoolbag! Pack your new schoolbag!', answer: 'Schoolbag', options: [
       { word: 'Schoolbag', cn: '书包', emoji: '🎒' },
       { word: 'Pencil', cn: '铅笔', emoji: '✏️' },
       { word: 'Book', cn: '书本', emoji: '📖' },
@@ -558,20 +846,128 @@ export const ENGLISH_GAMES = {
       { word: 'Train', cn: '火车', emoji: '🚄' },
       { word: 'Airplane', cn: '飞机', emoji: '✈️' }
     ]},
-    { id: 'ewq6', word: 'Milk', cn: '纯牛奶', speak: 'Milk! Drink milk every morning!', answer: 'Milk', options: [
+    { id: 'ewq6', word: 'Milk', cn: '纯牛奶', speak: 'Milk! Drink warm milk every morning!', answer: 'Milk', options: [
       { word: 'Bread', cn: '面包', emoji: '🍞' },
       { word: 'Milk', cn: '牛奶', emoji: '🥛' },
       { word: 'Cake', cn: '蛋糕', emoji: '🎂' },
       { word: 'Egg', cn: '鸡蛋', emoji: '🥚' }
+    ]},
+    { id: 'ewq7', word: 'Tiger', cn: '大老虎', speak: 'Tiger! The brave tiger runs so fast!', answer: 'Tiger', options: [
+      { word: 'Tiger', cn: '大老虎', emoji: '🐯' },
+      { word: 'Lion', cn: '大狮子', emoji: '🦁' },
+      { word: 'Elephant', cn: '大象', emoji: '🐘' },
+      { word: 'Giraffe', cn: '长颈鹿', emoji: '🦒' }
+    ]},
+    { id: 'ewq8', word: 'Elephant', cn: '大象', speak: 'Elephant! The elephant has a long nose!', answer: 'Elephant', options: [
+      { word: 'Monkey', cn: '小猴', emoji: '🐵' },
+      { word: 'Elephant', cn: '大象', emoji: '🐘' },
+      { word: 'Panda', cn: '大熊猫', emoji: '🐼' },
+      { word: 'Horse', cn: '小马', emoji: '🐴' }
+    ]},
+    { id: 'ewq9', word: 'Strawberry', cn: '甜草莓', speak: 'Strawberry! I love sweet red strawberries!', answer: 'Strawberry', options: [
+      { word: 'Peach', cn: '桃子', emoji: '🍑' },
+      { word: 'Orange', cn: '橙子', emoji: '🍊' },
+      { word: 'Strawberry', cn: '草莓', emoji: '🍓' },
+      { word: 'Grape', cn: '葡萄', emoji: '🍇' }
+    ]},
+    { id: 'ewq10', word: 'Watermelon', cn: '大西瓜', speak: 'Watermelon! Sweet and juicy big watermelon!', answer: 'Watermelon', options: [
+      { word: 'Pineapple', cn: '菠萝', emoji: '🍍' },
+      { word: 'Watermelon', cn: '西瓜', emoji: '🍉' },
+      { word: 'Mango', cn: '芒果', emoji: '🥭' },
+      { word: 'Pear', cn: '雪梨', emoji: '🍐' }
+    ]},
+    { id: 'ewq11', word: 'Red', cn: '红色', speak: 'Red! The red apple is sweet!', answer: 'Red', options: [
+      { word: 'Red', cn: '红色', emoji: '🔴' },
+      { word: 'Blue', cn: '蓝色', emoji: '🔵' },
+      { word: 'Yellow', cn: '黄色', emoji: '🟡' },
+      { word: 'Green', cn: '绿色', emoji: '🟢' }
+    ]},
+    { id: 'ewq12', word: 'Blue', cn: '蓝色', speak: 'Blue! The sky and ocean are blue!', answer: 'Blue', options: [
+      { word: 'Purple', cn: '紫色', emoji: '🟣' },
+      { word: 'White', cn: '白色', emoji: '⚪' },
+      { word: 'Blue', cn: '蓝色', emoji: '🔵' },
+      { word: 'Pink', cn: '粉色', emoji: '🌸' }
+    ]},
+    { id: 'ewq13', word: 'Yellow', cn: '黄色', speak: 'Yellow! A bright yellow star!', answer: 'Yellow', options: [
+      { word: 'Yellow', cn: '黄色', emoji: '🟡' },
+      { word: 'Orange', cn: '橙色', emoji: '🟠' },
+      { word: 'Brown', cn: '棕色', emoji: '🟤' },
+      { word: 'Green', cn: '绿色', emoji: '🟢' }
+    ]},
+    { id: 'ewq14', word: 'Green', cn: '绿色', speak: 'Green! Green grass in spring!', answer: 'Green', options: [
+      { word: 'Black', cn: '黑色', emoji: '⚫' },
+      { word: 'Green', cn: '绿色', emoji: '🟢' },
+      { word: 'Red', cn: '红色', emoji: '🔴' },
+      { word: 'Gray', cn: '灰色', emoji: '🔘' }
+    ]},
+    { id: 'ewq15', word: 'One', cn: '数字一', speak: 'One! One bright sun in the sky!', answer: 'One', options: [
+      { word: 'One', cn: '一 (1)', emoji: '1️⃣' },
+      { word: 'Two', cn: '二 (2)', emoji: '2️⃣' },
+      { word: 'Three', cn: '三 (3)', emoji: '3️⃣' },
+      { word: 'Four', cn: '四 (4)', emoji: '4️⃣' }
+    ]},
+    { id: 'ewq16', word: 'Five', cn: '数字五', speak: 'Five! High five, my champion!', answer: 'Five', options: [
+      { word: 'Six', cn: '六 (6)', emoji: '6️⃣' },
+      { word: 'Seven', cn: '七 (7)', emoji: '7️⃣' },
+      { word: 'Five', cn: '五 (5)', emoji: '5️⃣' },
+      { word: 'Eight', cn: '八 (8)', emoji: '8️⃣' }
+    ]},
+    { id: 'ewq17', word: 'Ten', cn: '数字十', speak: 'Ten! Ten little fingers!', answer: 'Ten', options: [
+      { word: 'Nine', cn: '九 (9)', emoji: '9️⃣' },
+      { word: 'Ten', cn: '十 (10)', emoji: '🔟' },
+      { word: 'Eight', cn: '八 (8)', emoji: '8️⃣' },
+      { word: 'Seven', cn: '七 (7)', emoji: '7️⃣' }
+    ]},
+    { id: 'ewq18', word: 'Book', cn: '书本', speak: 'Book! Open your storybook, please!', answer: 'Book', options: [
+      { word: 'Ruler', cn: '直尺', emoji: '📏' },
+      { word: 'Pencil', cn: '铅笔', emoji: '✏️' },
+      { word: 'Book', cn: '书本', emoji: '📖' },
+      { word: 'Eraser', cn: '橡皮', emoji: '🧼' }
+    ]},
+    { id: 'ewq19', word: 'Pencil', cn: '铅笔', speak: 'Pencil! Write numbers with a pencil!', answer: 'Pencil', options: [
+      { word: 'Pencil', cn: '铅笔', emoji: '✏️' },
+      { word: 'Crayon', cn: '蜡笔', emoji: '🖍️' },
+      { word: 'Glue', cn: '胶水', emoji: '🧴' },
+      { word: 'Scissors', cn: '剪刀', emoji: '✂️' }
+    ]},
+    { id: 'ewq20', word: 'Sun', cn: '太阳', speak: 'Sun! The warm sun is shining!', answer: 'Sun', options: [
+      { word: 'Moon', cn: '月亮', emoji: '🌙' },
+      { word: 'Sun', cn: '太阳', emoji: '☀️' },
+      { word: 'Cloud', cn: '白云', emoji: '☁️' },
+      { word: 'Rain', cn: '下雨', emoji: '🌧️' }
+    ]},
+    { id: 'ewq21', word: 'Moon', cn: '月亮', speak: 'Moon! Good night, bright silver moon!', answer: 'Moon', options: [
+      { word: 'Star', cn: '星星', emoji: '⭐' },
+      { word: 'Moon', cn: '月亮', emoji: '🌙' },
+      { word: 'Rainbow', cn: '彩虹', emoji: '🌈' },
+      { word: 'Snow', cn: '雪花', emoji: '❄️' }
+    ]},
+    { id: 'ewq22', word: 'Bus', cn: '校车/公交车', speak: 'Bus! Take the yellow school bus!', answer: 'Bus', options: [
+      { word: 'Bus', cn: '公交车', emoji: '🚌' },
+      { word: 'Car', cn: '小汽车', emoji: '🚗' },
+      { word: 'Bike', cn: '自行车', emoji: '🚲' },
+      { word: 'Ship', cn: '大轮船', emoji: '🚢' }
+    ]},
+    { id: 'ewq23', word: 'Train', cn: '高铁/火车', speak: 'Train! The fast bullet train goes choo-choo!', answer: 'Train', options: [
+      { word: 'Airplane', cn: '飞机', emoji: '✈️' },
+      { word: 'Train', cn: '火车', emoji: '🚄' },
+      { word: 'Subway', cn: '地铁', emoji: '🚇' },
+      { word: 'Boat', cn: '小帆船', emoji: '⛵' }
+    ]},
+    { id: 'ewq24', word: 'Police car', cn: '警车', speak: 'Police car! The brave police car helps people!', answer: 'Police car', options: [
+      { word: 'Fire truck', cn: '消防车', emoji: '🚒' },
+      { word: 'Ambulance', cn: '救护车', emoji: '🚑' },
+      { word: 'Police car', cn: '警车', emoji: '🚓' },
+      { word: 'Taxi', cn: '出租车', emoji: '🚕' }
     ]}
   ],
-  // 游戏3：亲子情景交际问答（爸爸妈妈问，宝贝答）
+  // 游戏3：亲子情景交际问答（紧扣12大情景对话，爸爸妈妈问，宝贝答）
   dialogueQuiz: [
     {
       id: 'edq1',
       scene: '🌅 早晨起床时',
-      parentSay: 'Good morning, sweetheart!',
-      parentCn: '早上好，小宝贝！',
+      parentSay: 'Good morning, sweetheart! Time to get up!',
+      parentCn: '早上好，小宝贝！该起床啦！',
       emoji: '☀️',
       answer: 'Good morning, Mommy!',
       options: [
@@ -612,9 +1008,9 @@ export const ENGLISH_GAMES = {
       parentSay: 'Look! What is that black and white animal?',
       parentCn: '快看！那只黑白相间的动物是什么？',
       emoji: '🐼',
-      answer: 'It is a cute panda!',
+      answer: 'It is a cute giant panda!',
       options: [
-        { en: 'It is a cute panda!', cn: '是一只可爱的大熊猫！' },
+        { en: 'It is a cute giant panda!', cn: '是一只可爱的大熊猫！' },
         { en: 'Open your schoolbag.', cn: '打开你的小书包。' },
         { en: 'Wash your face.', cn: '洗洗你的脸。' }
       ]
@@ -625,11 +1021,128 @@ export const ENGLISH_GAMES = {
       parentSay: 'Time for bed. Good night, my little star!',
       parentCn: '该睡觉啦。晚安，我的小星星！',
       emoji: '🌙',
-      answer: 'Good night! I love you!',
+      answer: 'Good night! I love you! Sweet dreams!',
       options: [
-        { en: 'Good night! I love you!', cn: '晚安！我爱你们！' },
+        { en: 'Good night! I love you! Sweet dreams!', cn: '晚安！我爱你们！做个好梦！' },
         { en: 'Time to get up!', cn: '该起床啦！' },
         { en: 'How many apples?', cn: '有多少个苹果？' }
+      ]
+    },
+    {
+      id: 'edq6',
+      scene: '🛒 水果超市买苹果',
+      parentSay: 'How many red apples do we need?',
+      parentCn: '我们需要几个红苹果呢？',
+      emoji: '🍎',
+      answer: 'Three apples for our family, please!',
+      options: [
+        { en: 'Three apples for our family, please!', cn: '请给我们家买三个苹果！' },
+        { en: 'I am playing with my toy car.', cn: '我正在玩玩具小汽车。' },
+        { en: 'The sky is blue.', cn: '天空是蓝色的。' }
+      ]
+    },
+    {
+      id: 'edq7',
+      scene: '🎒 准备书包去上学',
+      parentSay: 'Are you ready for school today?',
+      parentCn: '今天准备好去学校了吗？',
+      emoji: '🎒',
+      answer: 'Yes! My books and pencils are ready!',
+      options: [
+        { en: 'Yes! My books and pencils are ready!', cn: '准备好啦！我的书本和铅笔都带齐了！' },
+        { en: 'I see a flying kite.', cn: '我看见一只飞舞的风筝。' },
+        { en: 'Good night, Dad!', cn: '晚安，爸爸！' }
+      ]
+    },
+    {
+      id: 'edq8',
+      scene: '🚦 过马路遇到红灯',
+      parentSay: 'The traffic light is red now! What should we do?',
+      parentCn: '现在的信号灯是红灯！我们应该怎么做？',
+      emoji: '🛑',
+      answer: 'Red light, stop and wait!',
+      options: [
+        { en: 'Red light, stop and wait!', cn: '红灯停，停下来等一等！' },
+        { en: 'Green light, let us run fast!', cn: '绿灯快快跑！' },
+        { en: 'Have some milk!', cn: '喝点牛奶吧！' }
+      ]
+    },
+    {
+      id: 'edq9',
+      scene: '🌳 在公园看到小鸟',
+      parentSay: 'Look at the tree! What is that singing in the tree?',
+      parentCn: '看那棵大树！树上唱歌的是什么呀？',
+      emoji: '🐦',
+      answer: 'It is a happy little bird singing!',
+      options: [
+        { en: 'It is a happy little bird singing!', cn: '是一只快乐唱歌的小鸟！' },
+        { en: 'It is a yellow school bus.', cn: '是一辆黄色校车。' },
+        { en: 'Give me five!', cn: '和我击掌！' }
+      ]
+    },
+    {
+      id: 'edq10',
+      scene: '🎂 生日派对数蜡烛',
+      parentSay: 'How old are you today? Let us count the candles!',
+      parentCn: '你今天几岁啦？我们来数数蛋糕上的蜡烛吧！',
+      emoji: '🕯️',
+      answer: 'One, two, three, four, five, six! I am six!',
+      options: [
+        { en: 'One, two, three, four, five, six! I am six!', cn: '一二三四五六！我六岁啦！' },
+        { en: 'My backpack is green.', cn: '我的书包是绿色的。' },
+        { en: 'No, thank you.', cn: '不，谢谢。' }
+      ]
+    },
+    {
+      id: 'edq11',
+      scene: '🚜 农场里看到奶牛',
+      parentSay: 'What animal gives us fresh milk on the farm?',
+      parentCn: '农场里哪种动物为我们提供新鲜牛奶呢？',
+      emoji: '🐮',
+      answer: 'The cow! The cow says moo, moo!',
+      options: [
+        { en: 'The cow! The cow says moo, moo!', cn: '是奶牛！奶牛哞哞叫！' },
+        { en: 'The airplane in the sky.', cn: '天上的飞机。' },
+        { en: 'I have twelve crayons.', cn: '我有十二支蜡笔。' }
+      ]
+    },
+    {
+      id: 'edq12',
+      scene: '🐶 和小狗玩扔球',
+      parentSay: 'Throw the ball to the puppy! What will it do?',
+      parentCn: '把球扔给小狗！它会做什么呢？',
+      emoji: '🎾',
+      answer: 'It will run fast and fetch the ball!',
+      options: [
+        { en: 'It will run fast and fetch the ball!', cn: '它会飞快跑去把球捡回来！' },
+        { en: 'It is swimming in the river.', cn: '它正在河里游泳。' },
+        { en: 'Close your eyes and sleep.', cn: '闭上眼睛睡觉。' }
+      ]
+    },
+    {
+      id: 'edq13',
+      scene: '🎨 画画挑选颜色',
+      parentSay: 'What color do you like for the sun?',
+      parentCn: '你想用什么颜色画太阳公公呀？',
+      emoji: '☀️',
+      answer: 'Bright red and warm yellow!',
+      options: [
+        { en: 'Bright red and warm yellow!', cn: '鲜艳的红色和温暖的黄色！' },
+        { en: 'Dark black and cold gray.', cn: '黑黑的颜色和冷冷的灰色。' },
+        { en: 'The tiger is running.', cn: '老虎正在奔跑。' }
+      ]
+    },
+    {
+      id: 'edq14',
+      scene: '🌊 海边看到小鱼',
+      parentSay: 'Where do the colorful little fish live?',
+      parentCn: '五颜六色的小鱼住在哪里呀？',
+      emoji: '🐟',
+      answer: 'They swim happily in the blue sea!',
+      options: [
+        { en: 'They swim happily in the blue sea!', cn: '它们在蓝蓝的大海里欢快畅游！' },
+        { en: 'They live on the classroom blackboard.', cn: '它们住在教室的黑板上。' },
+        { en: 'I want an eraser, please.', cn: '请给我一块橡皮擦。' }
       ]
     }
   ]
