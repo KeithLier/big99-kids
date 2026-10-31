@@ -18,7 +18,7 @@
           </div>
           <div class="e-stat-pill">
             <span class="e-stat-icon">🍎</span>
-            <span class="e-stat-num">{{ englishWordsCount }}<small>/56</small></span>
+            <span class="e-stat-num">{{ englishWordsCount }}<small>/{{ TOTAL_ENGLISH_WORDS_COUNT }}</small></span>
           </div>
           <div class="e-stat-pill pink">
             <span class="e-stat-icon">👨‍👩‍👧</span>
@@ -141,7 +141,7 @@
         </div>
 
         <div class="speed-toggle-bar">
-          <span>🎧 点击任意单词卡即可听标准英文发音与例句！</span>
+          <span>🎧 默认点击卡片读单词，点击下方例句气泡专读例句！</span>
           <label class="slow-switch">
             <input type="checkbox" v-model="slowMode" />
             <span>🐢 开启慢速清晰领读模式</span>
@@ -159,7 +159,7 @@
             <div class="word-card-top">
               <span class="word-big-emoji">{{ w.emoji }}</span>
               <span v-if="isWordLearned(w.id)" class="learned-pill">⭐ 已掌握</span>
-              <span v-else class="listen-pill">🔊 点击发音</span>
+              <span v-else class="listen-pill">🔊 读单词</span>
             </div>
 
             <div class="word-main-info">
@@ -168,8 +168,12 @@
               <div class="word-cn-badge">{{ w.cn }}</div>
             </div>
 
-            <div class="word-example-box" @click.stop="speakWordSentence(w)">
-              <div class="ex-en">🗣️ "{{ w.exEn }}"</div>
+            <div class="word-example-box" @click.stop="speakWordSentence(w)" title="点击听例句跟读">
+              <div class="ex-top-row">
+                <span class="ex-tag">💬 场景例句</span>
+                <span class="ex-click-hint">🔊 点击读句子</span>
+              </div>
+              <div class="ex-en">"{{ w.exEn }}"</div>
               <div class="ex-cn">{{ w.exCn }}</div>
             </div>
           </div>
@@ -506,6 +510,7 @@ import {
   ALPHABET_LIST,
   ENGLISH_WORD_CATEGORIES,
   ENGLISH_WORDS,
+  TOTAL_ENGLISH_WORDS_COUNT,
   PARENT_KID_SCENES,
   ENGLISH_GAMES
 } from '../data/englishData'
@@ -600,7 +605,8 @@ function handleSelectWord(w) {
   if (!wasLearned) {
     showToast(`🍎 学会新单词【${w.en} (${w.cn})】！智慧值 +1`)
   }
-  speakEnglish(`${w.en}. ${w.exEn}`, { rate: slowMode.value ? 0.65 : 0.84 })
+  // 默认只读单词，不连读句子
+  speakEnglish(w.en, { rate: slowMode.value ? 0.65 : 0.84 })
 }
 
 function speakWordSentence(w) {
@@ -1460,16 +1466,62 @@ onMounted(() => {
 }
 
 .word-example-box {
-  background: #f8f9fa;
-  border: 1.5px dashed #cfd8dc;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: left;
+}
+
+.word-example-box:hover {
+  background: #f0fdf4;
+  border-color: #86efac;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.12);
+}
+
+.word-example-box:active {
+  transform: scale(0.97);
+}
+
+.ex-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ex-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+
+.ex-click-hint {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 1px 6px;
+  border-radius: 99px;
+  transition: all 0.15s ease;
+}
+
+.word-example-box:hover .ex-click-hint {
+  background: #10b981;
+  color: #ffffff;
 }
 
 .ex-en {
   font-size: 13.5px;
   font-weight: 900;
   color: #0277bd;
+  line-height: 1.4;
 }
 
 .ex-cn {
@@ -1477,6 +1529,7 @@ onMounted(() => {
   font-weight: 700;
   color: #546e7a;
   margin-top: 2px;
+  line-height: 1.4;
 }
 
 /* ================= MODE 3: Parent-Kid Roleplay Theater ================= */

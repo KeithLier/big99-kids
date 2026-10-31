@@ -75,7 +75,7 @@
                 <span class="stat-label">🔤 拼音</span>
               </div>
               <div class="mini-stat english-stat" @click="goTo('/english')" title="进入快乐英语乐园">
-                <span class="stat-num">{{ englishLettersCount + englishWordsCount }}<small>/82</small></span>
+                <span class="stat-num">{{ englishLettersCount + englishWordsCount }}<small>/186</small></span>
                 <span class="stat-label">🌈 英语</span>
               </div>
               <div class="mini-stat poetry-stat" @click="goTo('/poetry')" title="进入古诗词天地">
@@ -150,18 +150,19 @@
                       <h3>快乐英语启蒙乐园</h3>
                       <span class="course-badge english-badge">亲子双角互动</span>
                     </div>
-                    <p class="course-meta">26字母自然拼读 · 56个主题词 · 6大亲子情景剧</p>
+                    <p class="course-meta">26字母自然拼读 · 160个主题词 · 6大亲子情景剧</p>
                   </div>
                 </div>
-                <span class="progress-tag english-tag">已学 {{ englishLettersCount }} 字母 · {{ englishScenesCount }}/6 剧场</span>
+                <span class="progress-tag english-tag">已学 {{ englishLettersCount }} 字母 · {{ englishWordsCount }}/160 词</span>
               </div>
 
               <p class="card-desc">
-                从 <strong>Aa~Zz 自然拼读韵律歌</strong>到 <strong>8 大生活主题单词卡</strong>！独创<strong>「👨‍👩‍👧 亲子双角色情景对话剧场」</strong>（起床、用餐、超市、动物园等），支持分角色跟读与慢速拆词！
+                从 <strong>Aa~Zz 自然拼读韵律歌</strong>到 <strong>8 大生活主题单词卡（共160词）</strong>！独创<strong>「👨‍👩‍👧 亲子双角色情景对话剧场」</strong>（起床、用餐、超市、动物园等），支持分角色跟读与慢速拆词！
               </p>
 
               <div class="feature-highlights">
                 <span>🎵 字母自然拼读</span>
+                <span>🍎 160生活词汇</span>
                 <span>👨‍👩‍👧 爸妈宝贝对练</span>
                 <span>🐢 慢速逐词点读</span>
                 <span>🎪 3大英语游戏</span>
@@ -169,7 +170,7 @@
 
               <div class="card-footer">
                 <div class="course-progress-bar">
-                  <div class="bar-fill english-fill" :style="{ width: Math.min(100, Math.round(((englishLettersCount + englishWordsCount) / 82) * 100)) + '%' }"></div>
+                  <div class="bar-fill english-fill" :style="{ width: Math.min(100, Math.round(((englishLettersCount + englishWordsCount) / 186) * 100)) + '%' }"></div>
                 </div>
                 <span class="enter-link english-link">进入快乐英语乐园 ➔</span>
               </div>
