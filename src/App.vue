@@ -32,6 +32,9 @@
           <router-link to="/big99" class="nav-pill math-pill" active-class="active" @click="playClickSound">
             <span>🎠</span> 大九九速算
           </router-link>
+          <router-link to="/geography" class="nav-pill geo-pill" active-class="active" @click="playClickSound">
+            <span>🗺️</span> 中国地理
+          </router-link>
           <router-link to="/voice-settings" class="nav-pill voice-pill" active-class="active" @click="playClickSound">
             <span>🎙️</span> 声音工坊
           </router-link>
@@ -262,6 +265,12 @@ onMounted(() => {
 .nav-pill.math-pill.active {
   color: #0369A1;
   border-color: #BAE6FD;
+  background: #FFFFFF;
+}
+
+.nav-pill.geo-pill.active {
+  color: #0F766E;
+  border-color: #99F6E4;
   background: #FFFFFF;
 }
 

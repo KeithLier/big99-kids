@@ -52,6 +52,13 @@ const router = createRouter({
       meta: { title: '🎨 古诗词沉浸学习与互动闯关' }
     },
     {
+      path: '/geography',
+      alias: ['/china-geo', '/geo'],
+      name: 'geography',
+      component: () => import('../views/ChinaGeoView.vue'),
+      meta: { title: '🗺️ 中国地理百科乐园 - 34省市地图与城市风景美食文化语音点读' }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

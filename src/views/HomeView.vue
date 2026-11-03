@@ -86,16 +86,20 @@
                 <span class="stat-num">{{ mulLearnedCount }}<small>/190</small></span>
                 <span class="stat-label">🎠 大九九</span>
               </div>
+              <div class="mini-stat geo-stat" @click="goTo('/geography')" title="进入中国地理百科乐园">
+                <span class="stat-num">{{ geoProvincesCount }}<small>/34省</small></span>
+                <span class="stat-label">🗺️ 地理</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Level 2: 4 Core Course Bento Cards -->
+      <!-- Level 2: 5 Core Course Bento Cards -->
       <section class="feature-hub-section">
         <div class="section-heading">
           <div>
-            <h2>🎡 四大王牌启蒙与闯关课程</h2>
+            <h2>🎡 五大王牌启蒙与闯关课程</h2>
             <p>专为 5~12 岁少儿认知规律设计 · 点读跟读 · 亲子共学 · 跨学科星章激励</p>
           </div>
           <span class="heading-hint">点击任意课程卡片立即开启闯关</span>
@@ -256,6 +260,44 @@
               </div>
             </div>
           </div>
+
+          <!-- Card 5: China Geography Encyclopedia (Teal/Cyan Semantic Theme) -->
+          <div class="feature-card geo-card geo-span-full" @click="goTo('/geography')">
+            <div class="card-body">
+              <div class="card-header-row">
+                <div class="course-identity">
+                  <div class="course-icon-box geo-icon-box">🗺️</div>
+                  <div>
+                    <div class="course-title-group">
+                      <h3>中国地理百科乐园</h3>
+                      <span class="course-badge geo-badge">34省级行政区 · 含台湾省</span>
+                    </div>
+                    <p class="course-meta">标准中国地图与南海诸岛 · 省市二级地图下钻 · 城市四维百科双图语音点读</p>
+                  </div>
+                </div>
+                <span class="progress-tag geo-tag">已点亮 {{ geoProvincesCount }} / 34 省 · {{ geoCitiesCount }} 城</span>
+              </div>
+
+              <p class="card-desc">
+                配备<strong>标准中国行政区划图（含台湾省与南海诸岛附图）</strong>！点击任意省份即可进入<strong>省级城市地图</strong>，探索每座城市的<strong>📍地理位置、🏞️名胜风景、🍜特色美食、🎭历史文化</strong>，每座城市配备<strong>至少2张精美绘本图鉴</strong>与全程<strong>🔊语音导览朗读</strong>！
+              </p>
+
+              <div class="feature-highlights">
+                <span>🇨🇳 标准34省市地图(含台湾省)</span>
+                <span>🏙️ 省份下钻城市地图</span>
+                <span>🖼️ 风景+美食文化双图画卷</span>
+                <span>🔊 全程语音点读导览</span>
+                <span>🧭 地理小博士问答闯关</span>
+              </div>
+
+              <div class="card-footer">
+                <div class="course-progress-bar">
+                  <div class="bar-fill geo-fill" :style="{ width: Math.min(100, Math.round((geoProvincesCount / 34) * 100)) + '%' }"></div>
+                </div>
+                <span class="enter-link geo-link">进入中国地理百科乐园 ➔</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -352,6 +394,8 @@ const {
   englishLettersCount,
   englishWordsCount,
   englishScenesCount,
+  geoProvincesCount,
+  geoCitiesCount,
   totalWisdomPoints,
   unlockedStickers,
   kidRankTitle,
@@ -703,7 +747,7 @@ onMounted(() => {
 
 .mini-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -733,6 +777,7 @@ onMounted(() => {
 .english-stat .stat-num { color: #E11D48; }
 .poetry-stat .stat-num { color: #D97706; }
 .math-stat .stat-num { color: #0284C7; }
+.geo-stat .stat-num { color: #0D9488; }
 
 .stat-num small {
   font-size: 11px;
@@ -803,6 +848,8 @@ onMounted(() => {
 .english-card { border-top-color: #F43F5E; }
 .poetry-card { border-top-color: #F59E0B; }
 .math-card { border-top-color: #0EA5E9; }
+.geo-card { border-top-color: #0D9488; }
+.geo-span-full { grid-column: 1 / -1; }
 
 .card-body {
   padding: 22px 24px;
@@ -841,6 +888,7 @@ onMounted(() => {
 .english-icon-box { background: #FFF1F2; border: 1px solid #FECDD3; }
 .poetry-icon-box { background: #FFFBEB; border: 1px solid #FDE68A; }
 .math-icon-box { background: #F0F9FF; border: 1px solid #BAE6FD; }
+.geo-icon-box { background: #F0FDFA; border: 1px solid #99F6E4; }
 
 .course-title-group {
   display: flex;
@@ -866,6 +914,7 @@ onMounted(() => {
 .english-badge { background: #FFF1F2; color: #BE123C; }
 .poetry-badge { background: #FFFBEB; color: #B45309; }
 .math-badge { background: #F0F9FF; color: #0369A1; }
+.geo-badge { background: #F0FDFA; color: #0F766E; }
 
 .course-meta {
   font-size: 12.5px;
@@ -886,6 +935,7 @@ onMounted(() => {
 .english-tag { background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; }
 .poetry-tag { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
 .math-tag { background: #F0F9FF; color: #0369A1; border: 1px solid #BAE6FD; }
+.geo-tag { background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; }
 
 .card-desc {
   font-size: 13.5px;
@@ -966,6 +1016,7 @@ onMounted(() => {
 .english-fill { background: #F43F5E; }
 .poetry-fill { background: #F59E0B; }
 .math-fill { background: #0EA5E9; }
+.geo-fill { background: #0D9488; }
 
 .enter-link {
   font-size: 13px;
@@ -977,6 +1028,7 @@ onMounted(() => {
 .english-link { color: #E11D48; }
 .poetry-link { color: #D97706; }
 .math-link { color: #0284C7; }
+.geo-link { color: #0F766E; }
 
 /* Level 3: Bottom Section (Daily Poem & Sticker Book) */
 .bottom-grid-section {

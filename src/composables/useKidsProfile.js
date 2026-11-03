@@ -5,6 +5,7 @@ export const MUL_STORAGE_KEY = 'big99_completed_cells_v3'
 export const POETRY_STORAGE_KEY = 'kids_poetry_progress_v1'
 export const PINYIN_STORAGE_KEY = 'kids_pinyin_progress_v1'
 export const ENGLISH_STORAGE_KEY = 'kids_english_progress_v1'
+export const GEO_STORAGE_KEY = 'kids_geo_progress_v1'
 export const HISTORY_KEY = 'big99_daily_history_v1'
 
 function safeLoadJSON(key, fallback) {
@@ -43,6 +44,8 @@ const poetryProgress = ref(safeLoadJSON(POETRY_STORAGE_KEY, {}))
 const pinyinProgress = ref(safeLoadJSON(PINYIN_STORAGE_KEY, { learnedIds: {}, tonePlayed: 0, spellCount: 0, gameStars: 0 }))
 // English progress: { learnedLetters: { [l]: true }, learnedWords: { [w]: true }, completedScenes: { [id]: true }, gameStars: number }
 const englishProgress = ref(safeLoadJSON(ENGLISH_STORAGE_KEY, { learnedLetters: {}, learnedWords: {}, completedScenes: {}, gameStars: 0 }))
+// Geography progress: { exploredProvinces: { [adcode]: true }, exploredCities: { [cityKey]: true }, gameStars: number }
+const geoProgress = ref(safeLoadJSON(GEO_STORAGE_KEY, { exploredProvinces: {}, exploredCities: {}, gameStars: 0 }))
 const showProfileModal = ref(false)
 const globalToastMsg = ref('')
 let toastTimer = null
@@ -67,6 +70,7 @@ export function useKidsProfile() {
     poetryProgress.value = safeLoadJSON(POETRY_STORAGE_KEY, {})
     pinyinProgress.value = safeLoadJSON(PINYIN_STORAGE_KEY, { learnedIds: {}, tonePlayed: 0, spellCount: 0, gameStars: 0 })
     englishProgress.value = safeLoadJSON(ENGLISH_STORAGE_KEY, { learnedLetters: {}, learnedWords: {}, completedScenes: {}, gameStars: 0 })
+    geoProgress.value = safeLoadJSON(GEO_STORAGE_KEY, { exploredProvinces: {}, exploredCities: {}, gameStars: 0 })
   }
 
   function showToast(msg) {
@@ -204,6 +208,23 @@ export function useKidsProfile() {
     return next
   }
 
+  function recordGeoProgress(action = {}) {
+    const prev = geoProgress.value || { exploredProvinces: {}, exploredCities: {}, gameStars: 0 }
+    const nextProvinces = { ...(prev.exploredProvinces || {}) }
+    const nextCities = { ...(prev.exploredCities || {}) }
+    if (action.provinceAdcode) nextProvinces[String(action.provinceAdcode)] = true
+    if (action.cityKey) nextCities[String(action.cityKey)] = true
+    const next = {
+      exploredProvinces: nextProvinces,
+      exploredCities: nextCities,
+      gameStars: (prev.gameStars || 0) + (action.starDelta || 0),
+      updatedAt: new Date().toISOString()
+    }
+    geoProgress.value = next
+    safeSaveJSON(GEO_STORAGE_KEY, next)
+    return next
+  }
+
   const mulLearnedCount = computed(() => Object.keys(mulCompleted.value).length)
   const mulGoldCount = computed(() =>
     Object.values(mulCompleted.value).filter(v => v >= 3).length
@@ -235,6 +256,14 @@ export function useKidsProfile() {
   )
   const englishStars = computed(() => englishProgress.value?.gameStars || 0)
 
+  const geoProvincesCount = computed(() =>
+    Object.keys(geoProgress.value?.exploredProvinces || {}).length
+  )
+  const geoCitiesCount = computed(() =>
+    Object.keys(geoProgress.value?.exploredCities || {}).length
+  )
+  const geoStars = computed(() => geoProgress.value?.gameStars || 0)
+
   const totalWisdomPoints = computed(() => {
     return (
       mulLearnedCount.value +
@@ -246,7 +275,10 @@ export function useKidsProfile() {
       englishLettersCount.value +
       englishWordsCount.value +
       englishScenesCount.value * 3 +
-      englishStars.value
+      englishStars.value +
+      geoProvincesCount.value * 2 +
+      geoCitiesCount.value +
+      geoStars.value
     )
   })
 
@@ -274,6 +306,7 @@ export function useKidsProfile() {
     poetryProgress,
     pinyinProgress,
     englishProgress,
+    geoProgress,
     showProfileModal,
     globalToastMsg,
     mulLearnedCount,
@@ -287,6 +320,9 @@ export function useKidsProfile() {
     englishWordsCount,
     englishScenesCount,
     englishStars,
+    geoProvincesCount,
+    geoCitiesCount,
+    geoStars,
     totalWisdomPoints,
     unlockedStickers,
     kidRankTitle,
@@ -295,6 +331,7 @@ export function useKidsProfile() {
     recordPoetryProgress,
     recordPinyinProgress,
     recordEnglishProgress,
+    recordGeoProgress,
     showToast
   }
 }
