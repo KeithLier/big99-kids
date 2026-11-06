@@ -785,6 +785,18 @@ function goRandomPoem() {
   .poems-grid {
     grid-template-columns: 1fr;
   }
+  .dropdown-filters-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    gap: 8px;
+  }
+  .filter-select {
+    width: 100%;
+  }
+  .clear-filters-btn {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 560px) {

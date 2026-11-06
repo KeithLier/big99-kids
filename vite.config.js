@@ -17,6 +17,8 @@ export default defineConfig({
     }
   },
   build: {
+    // Keep the browser targets used by the previous Vite 5 build.
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     outDir: 'dist',
     assetsDir: 'assets'
   }

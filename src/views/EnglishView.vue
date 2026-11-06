@@ -307,8 +307,13 @@
 
           <!-- Theater Bottom Action Bar -->
           <div class="theater-footer">
-            <button type="button" class="auto-play-scene-btn" @click="autoPlayWholeScene">
-              ▶️ 自动连播整场情景剧
+            <button
+              type="button"
+              class="auto-play-scene-btn"
+              :class="{ playing: isAutoPlayingScene }"
+              @click="autoPlayWholeScene"
+            >
+              {{ isAutoPlayingScene ? '⏹️ 停止连播情景剧' : '▶️ 自动连播整场情景剧' }}
             </button>
 
             <button type="button" class="high-five-btn" @click="completeSceneRoleplay">
@@ -505,7 +510,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import {
   ALPHABET_LIST,
   ENGLISH_WORD_CATEGORIES,
@@ -534,7 +539,8 @@ const {
   playErrorSound,
   playVictoryFanfare,
   speakText,
-  speakEnglish
+  speakEnglish,
+  stopSpeech
 } = useSound()
 
 const modeTabs = [
@@ -620,15 +626,27 @@ const activeScene = ref(PARENT_KID_SCENES[0])
 const swapRoles = ref(false)
 const showCnTranslation = ref(true)
 const currentSpeakingLineIdx = ref(-1)
+const isAutoPlayingScene = ref(false)
+let autoPlayTimer = null
+
+function stopAutoPlayScene() {
+  if (autoPlayTimer) {
+    clearTimeout(autoPlayTimer)
+    autoPlayTimer = null
+  }
+  isAutoPlayingScene.value = false
+  currentSpeakingLineIdx.value = -1
+  stopSpeech()
+}
 
 function isSceneCompleted(sceneId) {
   return !!(englishProgress.value?.completedScenes && englishProgress.value.completedScenes[sceneId])
 }
 
 function selectScene(sc) {
+  stopAutoPlayScene()
   playClickSound()
   activeScene.value = sc
-  currentSpeakingLineIdx.value = -1
 }
 
 function getEffectiveRole(originalRole) {
@@ -647,6 +665,7 @@ function getEffectiveSpeakerName(line) {
 }
 
 function playDialogueLine(line, idx) {
+  stopAutoPlayScene()
   playClickSound()
   currentSpeakingLineIdx.value = idx
   const effRole = getEffectiveRole(line.role)
@@ -663,6 +682,7 @@ function playDialogueLine(line, idx) {
 }
 
 function speakSingleWord(wd) {
+  stopAutoPlayScene()
   playClickSound()
   const clean = wd.replace(/[^a-zA-Z’']/g, '')
   speakEnglish(clean || wd, { rate: 0.65 })
@@ -670,10 +690,17 @@ function speakSingleWord(wd) {
 
 function autoPlayWholeScene() {
   playClickSound()
+  if (isAutoPlayingScene.value) {
+    stopAutoPlayScene()
+    return
+  }
+  stopAutoPlayScene()
+  isAutoPlayingScene.value = true
   const lines = activeScene.value.dialogues
   let idx = 0
   function nextLine() {
-    if (idx >= lines.length) {
+    if (!isAutoPlayingScene.value || idx >= lines.length) {
+      isAutoPlayingScene.value = false
       currentSpeakingLineIdx.value = -1
       return
     }
@@ -684,8 +711,9 @@ function autoPlayWholeScene() {
       rate: slowMode.value ? 0.68 : 0.85,
       preferredRole,
       onEnd: () => {
+        if (!isAutoPlayingScene.value) return
         idx++
-        setTimeout(nextLine, 450)
+        autoPlayTimer = setTimeout(nextLine, 450)
       }
     })
   }
@@ -843,6 +871,7 @@ function nextChatQuiz() {
 }
 
 function switchMode(m) {
+  stopAutoPlayScene()
   playClickSound()
   activeMode.value = m
   gameFeedbackState.value = ''
@@ -864,6 +893,10 @@ function switchGameType(t) {
 
 onMounted(() => {
   refreshFromStorage()
+})
+
+onBeforeUnmount(() => {
+  stopAutoPlayScene()
 })
 </script>
 

@@ -36,8 +36,14 @@ function normalizeProfile(raw) {
   }
 }
 
+function readCompletedCells() {
+  const raw = safeLoadJSON(MUL_STORAGE_KEY, {})
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, value === true ? 2 : value]))
+}
+
 const kidProfile = ref(normalizeProfile(safeLoadJSON(PROFILE_KEY, null)))
-const mulCompleted = ref(safeLoadJSON(MUL_STORAGE_KEY, {}))
+const mulCompleted = ref(readCompletedCells())
 // Poetry progress: { [poemId]: { readDone: bool, gameDone: bool, quizDone: bool, stars: 0..3, updatedAt: string } }
 const poetryProgress = ref(safeLoadJSON(POETRY_STORAGE_KEY, {}))
 // Pinyin progress: { learnedIds: { [id]: true }, tonePlayed: number, spellCount: number, gameStars: number }
@@ -66,11 +72,50 @@ export const PET_STICKERS = [
 export function useKidsProfile() {
   function refreshFromStorage() {
     kidProfile.value = normalizeProfile(safeLoadJSON(PROFILE_KEY, null))
-    mulCompleted.value = safeLoadJSON(MUL_STORAGE_KEY, {})
+    mulCompleted.value = readCompletedCells()
     poetryProgress.value = safeLoadJSON(POETRY_STORAGE_KEY, {})
     pinyinProgress.value = safeLoadJSON(PINYIN_STORAGE_KEY, { learnedIds: {}, tonePlayed: 0, spellCount: 0, gameStars: 0 })
     englishProgress.value = safeLoadJSON(ENGLISH_STORAGE_KEY, { learnedLetters: {}, learnedWords: {}, completedScenes: {}, gameStars: 0 })
     geoProgress.value = safeLoadJSON(GEO_STORAGE_KEY, { exploredProvinces: {}, exploredCities: {}, gameStars: 0 })
+  }
+
+  function saveCompletedCells(data) {
+    const copy = data && typeof data === 'object' && !Array.isArray(data) ? { ...data } : {}
+    for (const key of Object.keys(copy)) {
+      if (copy[key] === true) copy[key] = 2
+    }
+    mulCompleted.value = copy
+    safeSaveJSON(MUL_STORAGE_KEY, copy)
+  }
+
+  function clearCompletedCells() {
+    mulCompleted.value = {}
+    try { window.localStorage.removeItem(MUL_STORAGE_KEY) } catch (e) {}
+  }
+
+  function readKidProfile() {
+    return normalizeProfile(safeLoadJSON(PROFILE_KEY, null))
+  }
+
+  function writeKidProfile(profile) {
+    const normalized = normalizeProfile(profile)
+    kidProfile.value = normalized
+    safeSaveJSON(PROFILE_KEY, normalized)
+  }
+
+  function readHistoryData() {
+    const data = safeLoadJSON(HISTORY_KEY, null)
+    return data && data.days && data.achievements ? data : { days: {}, achievements: {} }
+  }
+
+  function saveHistoryData(data) {
+    safeSaveJSON(HISTORY_KEY, data)
+  }
+
+  function clearKidProfileAndHistory() {
+    kidProfile.value = null
+    try { window.localStorage.removeItem(PROFILE_KEY) } catch (e) {}
+    try { window.localStorage.removeItem(HISTORY_KEY) } catch (e) {}
   }
 
   function showToast(msg) {
@@ -87,8 +132,7 @@ export function useKidsProfile() {
       ...newProfile,
       updatedAt: new Date().toISOString()
     })
-    kidProfile.value = normalized
-    safeSaveJSON(PROFILE_KEY, normalized)
+    writeKidProfile(normalized)
 
     // Also record sign-in achievement & log in shared daily history
     try {
@@ -327,6 +371,14 @@ export function useKidsProfile() {
     unlockedStickers,
     kidRankTitle,
     refreshFromStorage,
+    readCompletedCells,
+    saveCompletedCells,
+    clearCompletedCells,
+    readKidProfile,
+    writeKidProfile,
+    readHistoryData,
+    saveHistoryData,
+    clearKidProfileAndHistory,
     saveProfile,
     recordPoetryProgress,
     recordPinyinProgress,

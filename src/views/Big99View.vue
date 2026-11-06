@@ -220,8 +220,21 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from "vue"
 import { useKidsProfile } from "../composables/useKidsProfile"
+import { useSound } from "../composables/useSound"
+import { bindPosterResize, escapeHistoryText, safeSignatureDataUrl } from "../utils/big99Safety"
+import { getCellMeta, numberToChinese, getChantText, getBlindChantPrefix, getScaffoldBridgeHtml, getKidVisualExplanation, getPedagogicalNextCell as findNextCell } from "../utils/big99Curriculum"
 
-const { refreshFromStorage } = useKidsProfile()
+const {
+  refreshFromStorage, showProfileModal,
+  readCompletedCells: loadCompletedCells, saveCompletedCells, clearCompletedCells,
+  readKidProfile: loadKidProfile, writeKidProfile: saveKidProfileToStorage,
+  readHistoryData: loadHistoryData, saveHistoryData, clearKidProfileAndHistory
+} = useKidsProfile()
+const {
+  soundEnabled: globalSoundEnabled,
+  speakText: globalSpeakText,
+  stopSpeech: globalStopSpeech
+} = useSound()
 
 let cleanupResize = null
 
@@ -229,34 +242,10 @@ onMounted(() => {
   
   // ==================== STATE & 3-TIER MASTERY STORAGE ====================
   // completedCells[key] = 1 (🥉铜星: 初学) | 2 (🥈银星: 混测通过) | 3 (⭐金星: 复习守卫通过)
-  const STORAGE_KEY = 'big99_completed_cells_v3';
-  function loadCompletedCells() {
-    try {
-      const raw = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
-      // Normalize boolean from older version to level 2
-      Object.keys(raw).forEach(k => {
-        if (raw[k] === true) raw[k] = 2;
-      });
-      return raw;
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveCompletedCells(data) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {}
-  }
-  function clearCompletedCells() {
-    try {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {}
-  }
-
   let completedCells = loadCompletedCells();
   let soundEnabled = true;
   let fitScreenMode = true;
-  let kidXiao99Only = false; // 6岁小九九专享模式 (1-9行放大)
+  let kidXiao99Only = typeof window !== 'undefined' && window.innerWidth < 680; // 手机窄屏默认开启 6岁小九九放大模式
   let blindReciteMode = false; // 遮住得数背诵自测模式
 
   // Current active cell in modal
@@ -293,14 +282,9 @@ onMounted(() => {
   let reviewGuardQueue = [];
   let reviewGuardIndex = 0;
 
-  const CN_NUM = ['零','一','二','三','四','五','六','七','八','九','十',
-                  '十一','十二','十三','十四','十五','十六','十七','十八','十九'];
 
   
   // ==================== KID PROFILE (HANDWRITING SIGNATURE) & DAILY HISTORY STORAGE ====================
-  const PROFILE_KEY = 'big99_kid_profile_v1';
-  const HISTORY_KEY = 'big99_daily_history_v1';
-
   const ACHIEVEMENTS_DEF = [
     { id: 'sign_in', icon: '✍️', title: '签名小主人', desc: '完成手写姓名报到' },
     { id: 'first_cell', icon: '🌱', title: '初出茅庐', desc: '点亮第 1 个乘法方格' },
@@ -311,34 +295,6 @@ onMounted(() => {
     { id: 'xiao99_10', icon: '🟨', title: '小九九先锋', desc: '累计掌握满 10 个小九九方格' },
     { id: 'gold_10', icon: '👑', title: '金星大宗师', desc: '累计获得 10 颗 ⭐ 永久金星' }
   ];
-
-  function loadKidProfile() {
-    try {
-      return JSON.parse(window.localStorage.getItem(PROFILE_KEY) || 'null');
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function saveKidProfileToStorage(profile) {
-    try {
-      window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    } catch (e) {}
-  }
-
-  function loadHistoryData() {
-    try {
-      const raw = JSON.parse(window.localStorage.getItem(HISTORY_KEY) || 'null');
-      if (raw && raw.days && raw.achievements) return raw;
-    } catch (e) {}
-    return { days: {}, achievements: {} };
-  }
-
-  function saveHistoryData(data) {
-    try {
-      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
-    } catch (e) {}
-  }
 
   let kidProfile = loadKidProfile();
   let historyData = loadHistoryData();
@@ -445,6 +401,7 @@ onMounted(() => {
   let sigPenColor = '#d84315';
   let sigStrokes = []; // Array of stroke point arrays
   let currentStroke = [];
+  let cleanupSignatureCanvas = null;
 
   function initSignatureCanvas() {
     const canvas = document.getElementById('signatureCanvas');
@@ -496,6 +453,15 @@ onMounted(() => {
     canvas.addEventListener('touchstart', startDraw, { passive: false });
     canvas.addEventListener('touchmove', moveDraw, { passive: false });
     canvas.addEventListener('touchend', endDraw, { passive: false });
+    cleanupSignatureCanvas = () => {
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('mousemove', moveDraw);
+      window.removeEventListener('mouseup', endDraw);
+      canvas.removeEventListener('touchstart', startDraw);
+      canvas.removeEventListener('touchmove', moveDraw);
+      canvas.removeEventListener('touchend', endDraw);
+      delete canvas.dataset.bound;
+    };
   }
 
   function redrawSignatureCanvas() {
@@ -543,42 +509,7 @@ onMounted(() => {
   }
 
   function openNamePadModal() {
-    kidProfile = loadKidProfile();
-    initSignatureCanvas();
-    const modal = document.getElementById('namePadModal');
-    const closeBtn = document.getElementById('nameModalCloseBtn');
-    const input = document.getElementById('kidNameInput');
-    const fb = document.getElementById('namePadFeedback');
-    if (fb) fb.textContent = '';
-
-    if (closeBtn) {
-      closeBtn.style.display = 'inline-block';
-    }
-    if (input) {
-      const savedName = kidProfile ? (kidProfile.nameText || kidProfile.name || '') : '';
-      input.value = savedName === '小主人' ? '' : savedName;
-    }
-    if (kidProfile && kidProfile.strokes && kidProfile.strokes.length) {
-      sigStrokes = JSON.parse(JSON.stringify(kidProfile.strokes));
-      const hint = document.getElementById('canvasPlaceholderHint');
-      if (hint) hint.style.display = 'none';
-      redrawSignatureCanvas();
-    } else if (kidProfile && kidProfile.signatureDataUrl) {
-      sigStrokes = [];
-      const hint = document.getElementById('canvasPlaceholderHint');
-      if (hint) hint.style.display = 'none';
-      const canvas = document.getElementById('signatureCanvas');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const img = new Image();
-        img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        img.src = kidProfile.signatureDataUrl;
-      }
-    } else {
-      clearSignaturePad();
-    }
-    modal.classList.add('open');
+    showProfileModal.value = true;
   }
 
   function closeNamePadModal() {
@@ -665,10 +596,11 @@ onMounted(() => {
     const thresholds = [1, 3, 6, 10, 15, 22, 30, 45, 70, 100];
     const unlockedPets = thresholds.filter(t => totalLearned >= t).length;
 
-    const sigHtml = kidProfile && kidProfile.signatureDataUrl
-      ? `<img src="${kidProfile.signatureDataUrl}" style="height:44px;background:#fff;border:2px solid #ffb74d;border-radius:10px;padding:2px 8px;" alt="签名" />`
+    const signatureUrl = safeSignatureDataUrl(kidProfile?.signatureDataUrl);
+    const sigHtml = signatureUrl
+      ? `<img src="${signatureUrl}" style="height:44px;background:#fff;border:2px solid #ffb74d;border-radius:10px;padding:2px 8px;" alt="签名" />`
       : '';
-    const nameLabel = kidProfile && kidProfile.nameText ? kidProfile.nameText : '勇敢小主人';
+    const nameLabel = escapeHistoryText(kidProfile && kidProfile.nameText ? kidProfile.nameText : '勇敢小主人');
 
     const daysListHtml = allDays.length === 0
       ? `<div style="text-align:center;padding:22px;color:#777;font-weight:800;">📅 还没有今日闯关记录哦！快去点亮第一个乘法方格吧！</div>`
@@ -681,12 +613,12 @@ onMounted(() => {
             const icon = lv >= 3 ? '⭐' : '🥈';
             return `<span class="daily-eq-chip">${r}×${c}=${r*c} ${icon}</span>`;
           }).join('');
-          const logsHtml = (d.logs || []).slice(0, 6).map(l => `<div style="font-size:12px;color:#555;margin-top:2px;">• ${l}</div>`).join('');
+          const logsHtml = (d.logs || []).slice(0, 6).map(l => `<div style="font-size:12px;color:#555;margin-top:2px;">• ${escapeHistoryText(l)}</div>`).join('');
 
           return `
             <div class="daily-card">
               <div class="daily-card-header">
-                <span>📅 ${dKey} ${isToday ? '（今天）' : ''}</span>
+                <span>📅 ${escapeHistoryText(dKey)} ${isToday ? '（今天）' : ''}</span>
                 <span>共练习 <b>${(d.learnedCells || []).length}</b> 格 · 斩获 <b>${(d.goldCells || []).length}</b> 颗⭐金星</span>
               </div>
               ${eqChips ? `<div class="daily-eq-chips">${eqChips}</div>` : ''}
@@ -740,7 +672,7 @@ onMounted(() => {
                 <div style="font-size:13px;font-weight:900;color:#bf360c;">${a.title}</div>
                 <div style="font-size:11px;color:#666;font-weight:700;">${a.desc}</div>
                 <div style="font-size:10px;color:#2e7d32;font-weight:800;margin-top:2px;">
-                  ${unlockedDate ? '✅ ' + unlockedDate + ' 达成' : '🔒 待解锁'}
+                  ${unlockedDate ? '✅ ' + escapeHistoryText(unlockedDate) + ' 达成' : '🔒 待解锁'}
                 </div>
               </div>
             `;
@@ -777,10 +709,7 @@ onMounted(() => {
     kidProfile = null;
     historyData = { days: {}, achievements: {} };
     clearCompletedCells();
-    try {
-      window.localStorage.removeItem(PROFILE_KEY);
-      window.localStorage.removeItem(HISTORY_KEY);
-    } catch (e) {}
+    clearKidProfileAndHistory();
     closeResetConfirmModal();
     updateKidProfileUI();
     renderGrid();
@@ -816,8 +745,16 @@ onMounted(() => {
     }
     scale = Math.max(0.56, Math.min(1.05, scale));
 
+    const scaledW = Math.ceil(baseW * scale);
+    if (scaledW > availW) {
+      if (wrap) wrap.classList.add('zoom-scroll-mode');
+      frame.style.transformOrigin = 'top left';
+      scaler.style.width = scaledW + 'px';
+    } else {
+      frame.style.transformOrigin = 'top center';
+      scaler.style.width = '100%';
+    }
     frame.style.transform = `scale(${scale})`;
-    frame.style.transformOrigin = 'top center';
     scaler.style.height = Math.ceil(naturalH * scale + 8) + 'px';
   }
 
@@ -850,8 +787,7 @@ onMounted(() => {
     renderGrid();
   }
 
-  window.addEventListener('resize', updatePosterScale);
-  window.addEventListener('orientationchange', () => setTimeout(updatePosterScale, 150));
+  const cleanupPosterResize = bindPosterResize(window, updatePosterScale);
 
   // ==================== iOS / iPadOS SAFARI AUDIO & SPEECH UNLOCK ====================
   let audioCtx = null;
@@ -866,8 +802,9 @@ onMounted(() => {
     return audioCtx;
   }
 
-  window.addEventListener('touchstart', () => { getAudioCtx(); }, { once: true, passive: true });
-  window.addEventListener('pointerdown', () => { getAudioCtx(); }, { once: true, passive: true });
+  const unlockAudio = () => { getAudioCtx(); };
+  window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
 
   function playTone(freq = 523.25, duration = 0.14, type = 'sine') {
     if (!soundEnabled) return;
@@ -922,180 +859,37 @@ onMounted(() => {
   }
 
   function speakText(text, onEndCallback) {
-    if (!soundEnabled || !('speechSynthesis' in window)) {
+    if (!soundEnabled || !globalSoundEnabled.value) {
       if (onEndCallback) setTimeout(onEndCallback, 550);
       return;
     }
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'zh-CN';
-      utter.rate = 0.95;
-      utter.pitch = 1.15;
-      let called = false;
-      const done = () => {
-        if (!called && onEndCallback) {
-          called = true;
-          onEndCallback();
-        }
-      };
-      if (onEndCallback) {
-        utter.onend = done;
-        utter.onerror = done;
-        setTimeout(done, Math.max(1200, text.length * 250));
+    let called = false;
+    let fallbackTimer = null;
+    const done = () => {
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
       }
-      window.speechSynthesis.speak(utter);
+      if (!called && onEndCallback) {
+        called = true;
+        onEndCallback();
+      }
+    };
+    if (onEndCallback) {
+      fallbackTimer = setTimeout(done, Math.max(1400, String(text || '').length * 280));
+    }
+    try {
+      globalSpeakText(text, {
+        onEnd: done
+      });
     } catch (e) {
-      if (onEndCallback) setTimeout(onEndCallback, 550);
+      if (onEndCallback) setTimeout(done, 550);
     }
   }
 
   // ==================== CLASSIFICATION & MNEMONICS ====================
-  function getCellMeta(r, c) {
-    let bgClass = 'bg-jinliang-right';
-    let categoryKey = 'jinliang';
-    let categoryLabel = '尽量背';
-
-    if (r <= 9) {
-      bgClass = 'bg-xiao99';
-      categoryKey = 'xiao99';
-      categoryLabel = '小九九';
-    } else if (c === 1 || r === 10 || c === 10) {
-      bgClass = 'bg-moren';
-      categoryKey = 'moren';
-      categoryLabel = '默认掌握';
-    } else if (r === 11 || c === 11 || r === 19 || c === 9 || r === c) {
-      bgClass = 'bg-guilv';
-      categoryKey = 'guilv';
-      categoryLabel = '有规律背';
-    } else if (c >= 2 && c <= 8) {
-      bgClass = 'bg-jinliang-left';
-      categoryKey = 'jinliang';
-      categoryLabel = '尽量背';
-    }
-
-    let textClass = 'text-dark';
-    let fontTag = '';
-    if (r === c) {
-      textClass = 'text-red';
-      fontTag = 'red';
-    } else if ((c === 5 && r >= 12 && r <= 18) || (r === 15 && c >= 2 && c <= 8)) {
-      textClass = 'text-blue';
-      fontTag = 'blue';
-    }
-
-    return { bgClass, categoryKey, categoryLabel, textClass, fontTag };
-  }
-
-  function numberToChinese(num) {
-    if (num <= 19) return CN_NUM[num];
-    if (num < 100) {
-      const tens = Math.floor(num / 10);
-      const ones = num % 10;
-      return CN_NUM[tens] + '十' + (ones > 0 ? CN_NUM[ones] : '');
-    }
-    const hundreds = Math.floor(num / 100);
-    const rem = num % 100;
-    const tens = Math.floor(rem / 10);
-    const ones = rem % 10;
-    let res = CN_NUM[hundreds] + '百';
-    if (rem === 0) return res;
-    if (tens === 0) {
-      res += '零' + CN_NUM[ones];
-    } else {
-      res += CN_NUM[tens] + '十' + (ones > 0 ? CN_NUM[ones] : '');
-    }
-    return res;
-  }
-
-  function getChantText(r, c) {
-    const prod = r * c;
-    if (r <= 9 && c <= 9) {
-      const a = Math.min(r, c);
-      const b = Math.max(r, c);
-      if (prod < 10) {
-        return `${CN_NUM[a]}${CN_NUM[b]}得${CN_NUM[prod]}`;
-      }
-      return `${CN_NUM[a]}${CN_NUM[b]}${numberToChinese(prod)}`;
-    }
-    return `${numberToChinese(r)} 乘 ${numberToChinese(c)} 等于 ${numberToChinese(prod)}`;
-  }
-
-  function getBlindChantPrefix(r, c) {
-    if (r <= 9 && c <= 9) {
-      const a = Math.min(r, c);
-      const b = Math.max(r, c);
-      return `${CN_NUM[a]}${CN_NUM[b]} [ ❓ ]`;
-    }
-    return `${numberToChinese(r)} 乘 ${numberToChinese(c)} 等于 [ ❓ ]`;
-  }
-
-  // Scaffold Bridge: Connect current cell (r, c) to previous neighbor (r-1, c) or (r, c-1)
-  function getScaffoldBridgeHtml(r, c) {
-    const prod = r * c;
-    if (r > 1 && r - 1 >= c) {
-      const prevProd = (r - 1) * c;
-      return `
-        <span>🪜 <b>阶梯记忆跳板</b>：上一格 <b>${r - 1} × ${c} = ${prevProd}</b></span>
-        <span>➕ 往下走一格，多加 1 个 <b>${c}</b>（${prevProd} + ${c}）➔ 就是 <b>${r} × ${c} = ${prod}</b>！</span>
-      `;
-    }
-    if (c > 1) {
-      const prevProd = r * (c - 1);
-      return `
-        <span>🪜 <b>阶梯记忆跳板</b>：左一格 <b>${r} × ${c - 1} = ${prevProd}</b></span>
-        <span>➕ 往右走一格，多加 1 个 <b>${r}</b>（${prevProd} + ${r}）➔ 就是 <b>${r} × ${c} = ${prod}</b>！</span>
-      `;
-    }
-    return `<span>🪜 <b>起点方格</b>：1 乘任何数都等于它自己，这是所有乘法的起点哦！</span>`;
-  }
-
-  function getKidVisualExplanation(r, c) {
-    const prod = r * c;
-    const icons = ['🍓', '🍩', '🍊', '🍦', '🌟', '🍎'];
-    const icon = icons[(r + c) % icons.length];
-
-    if (r <= 10 && c <= 6) {
-      const groups = [];
-      for (let i = 0; i < c; i++) {
-        groups.push(`<span style="background:#fff;padding:2px 6px;border-radius:8px;border:1.5px solid #ffcc80;display:inline-block;margin:2px;">${icon.repeat(r)} (${r})</span>`);
-      }
-      return `<div>👀 <b>具象分组图</b>：一共 <b>${c}</b> 盘，每盘 <b>${r}</b> 个 ${icon} ➔ ${groups.join(' + ')} = <b>${prod}</b> 个！</div>`;
-    } else if (r > 10) {
-      const ones = r - 10;
-      return `<div>🪄 <b>拆十巧算魔法</b>：把 <b>${r}</b> 拆成 <b>10 + ${ones}</b> ➔ 先算 10×${c}=<b>${10*c}</b>，再加 ${ones}×${c}=<b>${ones*c}</b>，合起来是 <b>${prod}</b>！</div>`;
-    }
-    return `<div>👀 <b>累加数感</b>：<b>${c}</b> 个 <b>${r}</b> 相加（每次跳数 +${r}），合起来正好是 <b>${prod}</b>！</div>`;
-  }
-
-  // Recommend next cell in pedagogical order (×1 -> ×2 -> ×5 -> Squares -> ×3 -> ×4 -> rest of 1-9 -> 10-19)
   function getPedagogicalNextCell() {
-    const priorityOrder = [];
-    // 1. Col 1 (1..9)
-    for (let r = 1; r <= 9; r++) priorityOrder.push([r, 1]);
-    // 2. Col 2 (2..9)
-    for (let r = 2; r <= 9; r++) priorityOrder.push([r, 2]);
-    // 3. Col 5 & Row 5
-    for (let c = 1; c <= 5; c++) priorityOrder.push([5, c]);
-    for (let r = 6; r <= 9; r++) priorityOrder.push([r, 5]);
-    // 4. Rest of 1..9 row by row
-    for (let r = 3; r <= 9; r++) {
-      for (let c = 3; c <= r; c++) {
-        priorityOrder.push([r, c]);
-      }
-    }
-    // 5. Rows 10..19 if not in 9x9 mode
-    if (!kidXiao99Only) {
-      for (let r = 10; r <= 19; r++) {
-        for (let c = 1; c <= r; c++) {
-          priorityOrder.push([r, c]);
-        }
-      }
-    }
-    for (const [r, c] of priorityOrder) {
-      if (!completedCells[`${r}x${c}`]) return [r, c];
-    }
-    return [6, 4];
+    return findNextCell(completedCells, kidXiao99Only);
   }
 
   // ==================== BUILD GRID ====================
@@ -1103,6 +897,11 @@ onMounted(() => {
     const grid = document.getElementById('mulGrid');
     grid.innerHTML = '';
     grid.classList.toggle('xiao99-focus-mode', kidXiao99Only);
+    const kidBtn = document.getElementById('kidModeBtn');
+    if (kidBtn) {
+      kidBtn.classList.toggle('active-kid', kidXiao99Only);
+      kidBtn.textContent = kidXiao99Only ? '🗺️ 切回19×19全表' : '👶 6岁小九九专享(放大)';
+    }
 
     const maxR = kidXiao99Only ? 9 : 19;
     const [nextR, nextC] = getPedagogicalNextCell();
@@ -1607,7 +1406,7 @@ onMounted(() => {
       arena.innerHTML = `
         <div class="game-prompt">🎉 算对啦！<b>${currentC} 盘 × 每盘 ${currentR} 个 = ${prod} 个</b> 草莓！</div>
         <div style="text-align:center;padding:14px;">
-          <div style="font-size:66px;animation:popIn 0.4s ease;">🦖💨🍓</div>
+          <div style="font-size:66px;animation:big99-popIn 0.4s ease;">🦖💨🍓</div>
           <div style="font-size:18px;font-weight:900;color:#2e7d32;margin-top:6px;">
             “嗝~ 好香呀！${currentR} × ${currentC} = ${prod}，你真的算出来啦！”
           </div>
@@ -2147,7 +1946,7 @@ onMounted(() => {
     const container = document.getElementById('modalBodyContent');
     container.innerHTML = `
       <div style="text-align:center;padding:12px 10px;">
-        <div style="font-size:58px;animation:popIn 0.5s ease;">${newLevel === 3 ? '🌟🏆🌟' : '🥈🎉🦖'}</div>
+        <div style="font-size:58px;animation:big99-popIn 0.5s ease;">${newLevel === 3 ? '🌟🏆🌟' : '🥈🎉🦖'}</div>
         <h2 style="font-size:25px;color:#2e7d32;margin:6px 0;">新旧混测全对！闯关成功！</h2>
         <p style="font-size:18px;font-weight:900;color:#d84315;margin-bottom:8px;">
           「 ${r} × ${c} = ${prod} 」已点亮：${badgeName}
@@ -2441,8 +2240,11 @@ onMounted(() => {
   window.launchConfetti = launchConfetti;
   const onGlobalProfileUpdate = () => {
     kidProfile = loadKidProfile();
+    historyData = loadHistoryData();
+    completedCells = loadCompletedCells();
     updateKidProfileUI();
     refreshFromStorage();
+    renderGrid();
   };
   // Initialize on page load
   updateKidProfileUI();
@@ -2452,10 +2254,13 @@ onMounted(() => {
   window.addEventListener("kid-profile-updated", onGlobalProfileUpdate);
   cleanupResize = () => {
     if (typeof clearGameTimers === "function") clearGameTimers()
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel()
+    globalStopSpeech()
     window.removeEventListener("storage", onGlobalProfileUpdate);
     window.removeEventListener("kid-profile-updated", onGlobalProfileUpdate);
-    window.removeEventListener("resize", updatePosterScale);
+    cleanupPosterResize();
+    window.removeEventListener("touchstart", unlockAudio);
+    window.removeEventListener("pointerdown", unlockAudio);
+    if (cleanupSignatureCanvas) cleanupSignatureCanvas();
     document.body.classList.remove("zoom-scroll-mode");
   }
 })
@@ -2468,7 +2273,7 @@ onBeforeUnmount(() => {
 
 <style>
 
-    :root {
+    .big99-page-wrapper {
       --border-green: #1f9d4c;
       --bg-cream: #fcfaf0;
       --title-red: #e5322e;
@@ -2483,7 +2288,8 @@ onBeforeUnmount(() => {
       --grid-border: #d5cfa8;
     }
 
-    * {
+    .big99-page-wrapper,
+    .big99-page-wrapper * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -2512,7 +2318,7 @@ onBeforeUnmount(() => {
     }
 
     /* Orientation / iPad Quick Tip Banner */
-    .ipad-tip-banner {
+    :where(.big99-page-wrapper) .ipad-tip-banner {
       display: none;
       width: 100%;
       max-width: 1320px;
@@ -2531,13 +2337,13 @@ onBeforeUnmount(() => {
     }
 
     @media (max-width: 960px) {
-      .ipad-tip-banner {
+      :where(.big99-page-wrapper) .ipad-tip-banner {
         display: flex;
       }
     }
 
     /* Responsive Scaler Container */
-    .poster-scaler {
+    :where(.big99-page-wrapper) .poster-scaler {
       width: 100%;
       display: flex;
       justify-content: center;
@@ -2551,7 +2357,7 @@ onBeforeUnmount(() => {
     }
 
     /* Outer Poster Frame (精简紧凑内边距) */
-    .poster-frame {
+    :where(.big99-page-wrapper) .poster-frame {
       width: 1320px;
       height: fit-content;
       align-self: flex-start;
@@ -2573,7 +2379,7 @@ onBeforeUnmount(() => {
     }
 
     /* Top Control, Progress & Pet Sticker Bar */
-    .top-toolbar {
+    :where(.big99-page-wrapper) .top-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -2586,7 +2392,7 @@ onBeforeUnmount(() => {
       margin-bottom: 12px;
     }
 
-    .progress-box {
+    :where(.big99-page-wrapper) .progress-box {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -2595,7 +2401,7 @@ onBeforeUnmount(() => {
       color: #0F172A;
     }
 
-    .progress-bar-outer {
+    :where(.big99-page-wrapper) .progress-bar-outer {
       width: 115px;
       height: 14px;
       background: #e9ecef;
@@ -2604,14 +2410,14 @@ onBeforeUnmount(() => {
       border: 1.5px solid #a5d6a7;
     }
 
-    .progress-bar-inner {
+    :where(.big99-page-wrapper) .progress-bar-inner {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #ffca28, #ff6d00);
       transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .sticker-strip {
+    :where(.big99-page-wrapper) .sticker-strip {
       display: flex;
       align-items: center;
       gap: 3px;
@@ -2624,25 +2430,26 @@ onBeforeUnmount(() => {
       color: #e65100;
     }
 
-    .sticker-icon {
+    :where(.big99-page-wrapper) .sticker-icon {
       font-size: 16.5px;
       filter: grayscale(100%) opacity(0.3);
       transition: all 0.3s;
     }
 
-    .sticker-icon.unlocked {
+    :where(.big99-page-wrapper) .sticker-icon.unlocked {
       filter: none;
       transform: scale(1.15);
     }
 
-    .filter-group {
+    :where(.big99-page-wrapper) .filter-group {
       display: flex;
       align-items: center;
       gap: 5px;
       flex-wrap: wrap;
     }
 
-    .filter-btn, .action-btn {
+    :where(.big99-page-wrapper) .filter-btn,
+    :where(.big99-page-wrapper) .action-btn {
       border: none;
       padding: 6px 11px;
       min-height: 34px;
@@ -2656,80 +2463,80 @@ onBeforeUnmount(() => {
       gap: 4px;
     }
 
-    .filter-btn {
+    :where(.big99-page-wrapper) .filter-btn {
       background: #f1f5f2;
       color: #445;
       border: 1.5px solid transparent;
     }
 
-    .filter-btn:active {
+    :where(.big99-page-wrapper) .filter-btn:active {
       transform: scale(0.95);
     }
 
-    .filter-btn.active {
+    :where(.big99-page-wrapper) .filter-btn.active {
       background: #1f9d4c;
       color: #fff;
       box-shadow: 0 3px 8px rgba(31, 157, 76, 0.3);
     }
 
-    .action-btn.kid-mode-btn {
+    :where(.big99-page-wrapper) .action-btn.kid-mode-btn {
       background: linear-gradient(135deg, #7b1fa2, #ba68c8);
       color: #fff;
       box-shadow: 0 3px 10px rgba(123, 31, 162, 0.3);
     }
 
-    .action-btn.kid-mode-btn.active-kid {
+    :where(.big99-page-wrapper) .action-btn.kid-mode-btn.active-kid {
       background: linear-gradient(135deg, #d81b60, #ff4081);
     }
 
-    .action-btn.blind-btn {
+    :where(.big99-page-wrapper) .action-btn.blind-btn {
       background: #fff3e0;
       color: #e65100;
       border: 1.5px solid #ffb74d;
     }
 
-    .action-btn.blind-btn.active-blind {
+    :where(.big99-page-wrapper) .action-btn.blind-btn.active-blind {
       background: #e65100;
       color: #fff;
     }
 
-    .action-btn.review-guard-btn {
+    :where(.big99-page-wrapper) .action-btn.review-guard-btn {
       background: linear-gradient(135deg, #d32f2f, #ff6d00);
       color: #fff;
       box-shadow: 0 3px 10px rgba(211, 47, 47, 0.35);
-      animation: pulseAlert 1.8s infinite alternate;
+      animation: big99-pulseAlert 1.8s infinite alternate;
     }
 
-    @keyframes pulseAlert {
+    @keyframes big99-pulseAlert {
       0% { transform: scale(1); }
       100% { transform: scale(1.05); }
     }
 
-    .action-btn.random-btn {
+    :where(.big99-page-wrapper) .action-btn.random-btn {
       background: linear-gradient(135deg, #ff8f00, #ff4081);
       color: #fff;
       box-shadow: 0 3px 10px rgba(255, 64, 129, 0.35);
     }
 
-    .action-btn.zoom-btn {
+    :where(.big99-page-wrapper) .action-btn.zoom-btn {
       background: #e8eaf6;
       color: #283593;
       border: 1.5px solid #9fa8da;
     }
 
-    .action-btn.sound-btn {
+    :where(.big99-page-wrapper) .action-btn.sound-btn {
       background: #e3f2fd;
       color: #1565c0;
     }
 
-    .action-btn.reset-btn {
+    :where(.big99-page-wrapper) .action-btn.reset-btn {
       background: #fce4ec;
       color: #c2185b;
       font-size: 12px;
     }
 
     /* Header Title Blocks (紧凑字块) */
-    .poster-header {
+    :where(.big99-page-wrapper) .poster-header {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -2738,12 +2545,12 @@ onBeforeUnmount(() => {
       padding: 1px 0;
     }
 
-    .title-blocks {
+    :where(.big99-page-wrapper) .title-blocks {
       display: flex;
       gap: 6px;
     }
 
-    .title-char {
+    :where(.big99-page-wrapper) .title-char {
       width: 40px;
       height: 42px;
       background: var(--title-red);
@@ -2760,11 +2567,11 @@ onBeforeUnmount(() => {
       cursor: pointer;
     }
 
-    .title-char:active {
+    :where(.big99-page-wrapper) .title-char:active {
       transform: scale(0.92);
     }
 
-    .shooting-star-deco {
+    :where(.big99-page-wrapper) .shooting-star-deco {
       position: absolute;
       right: 20px;
       top: -4px;
@@ -2774,7 +2581,7 @@ onBeforeUnmount(() => {
     }
 
     /* 19x19 Unified CSS Grid — Mathematical Zero-Overlap Layout */
-    .mul-grid {
+    :where(.big99-page-wrapper) .mul-grid {
       display: grid;
       grid-template-columns: repeat(19, minmax(0, 1fr));
       grid-template-rows: repeat(19, 34px);
@@ -2784,13 +2591,13 @@ onBeforeUnmount(() => {
     }
 
     /* 6-Year-Old 9x9 Focus Mode: Enlarged Touch Cells */
-    .mul-grid.xiao99-focus-mode {
+    :where(.big99-page-wrapper) .mul-grid.xiao99-focus-mode {
       grid-template-columns: repeat(9, minmax(0, 1fr));
       grid-template-rows: repeat(9, 54px);
       gap: 5px;
     }
 
-    .mul-cell {
+    :where(.big99-page-wrapper) .mul-cell {
       border: 1px solid var(--grid-border);
       border-radius: 5px;
       display: flex;
@@ -2806,14 +2613,15 @@ onBeforeUnmount(() => {
       padding: 0 1px;
     }
 
-    .mul-grid.xiao99-focus-mode .mul-cell {
+    :where(.big99-page-wrapper) .mul-grid.xiao99-focus-mode .mul-cell {
       font-size: 19px;
       border-radius: 10px;
       border-width: 2px;
       letter-spacing: 0.5px;
     }
 
-    .mul-cell:hover, .mul-cell:active {
+    :where(.big99-page-wrapper) .mul-cell:hover,
+    :where(.big99-page-wrapper) .mul-cell:active {
       transform: scale(1.14);
       z-index: 30;
       box-shadow: 0 5px 14px rgba(0, 0, 0, 0.24);
@@ -2822,42 +2630,42 @@ onBeforeUnmount(() => {
     }
 
     /* Next-recommended scaffolding cell highlight */
-    .mul-cell.recommended-next {
+    :where(.big99-page-wrapper) .mul-cell.recommended-next {
       outline: 2.5px dashed #ff6d00;
       outline-offset: -2px;
     }
 
     /* Cell Background Categories */
-    .bg-xiao99 { background-color: var(--xiao99-bg); }
-    .bg-guilv { background-color: var(--guilv-bg); }
-    .bg-jinliang-left { background-color: var(--jinliang-left-bg); }
-    .bg-jinliang-right { background-color: var(--jinliang-right-bg); }
-    .bg-moren { background-color: var(--moren-bg); }
+    :where(.big99-page-wrapper) .bg-xiao99 { background-color: var(--xiao99-bg); }
+    :where(.big99-page-wrapper) .bg-guilv { background-color: var(--guilv-bg); }
+    :where(.big99-page-wrapper) .bg-jinliang-left { background-color: var(--jinliang-left-bg); }
+    :where(.big99-page-wrapper) .bg-jinliang-right { background-color: var(--jinliang-right-bg); }
+    :where(.big99-page-wrapper) .bg-moren { background-color: var(--moren-bg); }
 
     /* Cell Font Colors */
-    .text-red { color: var(--text-red); font-weight: 900; }
-    .text-blue { color: var(--text-blue); font-weight: 900; }
-    .text-dark { color: var(--text-dark); }
+    :where(.big99-page-wrapper) .text-red { color: var(--text-red); font-weight: 900; }
+    :where(.big99-page-wrapper) .text-blue { color: var(--text-blue); font-weight: 900; }
+    :where(.big99-page-wrapper) .text-dark { color: var(--text-dark); }
 
     /* Dimmed state when filtering */
-    .mul-cell.dimmed {
+    :where(.big99-page-wrapper) .mul-cell.dimmed {
       opacity: 0.16;
       filter: grayscale(75%);
       pointer-events: none;
     }
 
     /* 3-Tier Mastery Badges on Cells (1=🥉铜星, 2=🥈银星, 3=⭐金星) */
-    .mul-cell.level-1 {
+    :where(.big99-page-wrapper) .mul-cell.level-1 {
       box-shadow: inset 0 0 0 2px #cd7f32;
     }
-    .mul-cell.level-2 {
+    :where(.big99-page-wrapper) .mul-cell.level-2 {
       box-shadow: inset 0 0 0 2px #1976d2;
     }
-    .mul-cell.level-3 {
+    :where(.big99-page-wrapper) .mul-cell.level-3 {
       box-shadow: inset 0 0 0 2.5px #2e7d32;
     }
 
-    .mul-cell .done-badge {
+    :where(.big99-page-wrapper) .mul-cell .done-badge {
       position: absolute;
       top: -5px;
       right: -5px;
@@ -2873,10 +2681,10 @@ onBeforeUnmount(() => {
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.25);
       z-index: 5;
-      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: big99-popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .mul-grid.xiao99-focus-mode .mul-cell .done-badge {
+    :where(.big99-page-wrapper) .mul-grid.xiao99-focus-mode .mul-cell .done-badge {
       width: 24px;
       height: 24px;
       font-size: 14px;
@@ -2884,13 +2692,13 @@ onBeforeUnmount(() => {
       right: -7px;
     }
 
-    @keyframes popIn {
+    @keyframes big99-popIn {
       0% { transform: scale(0); }
       100% { transform: scale(1); }
     }
 
     /* Balloons placed cleanly in empty Grid Rows 2-5, Cols 5-6 */
-    .balloons-grid-item {
+    :where(.big99-page-wrapper) .balloons-grid-item {
       grid-row: 2 / 6;
       grid-column: 5 / 7;
       display: flex;
@@ -2901,7 +2709,7 @@ onBeforeUnmount(() => {
     }
 
     /* Unit Conversion Top Box: Rows 2-6 (inclusive), Cols 7-19 (inclusive) */
-    .unit-top-grid-item {
+    :where(.big99-page-wrapper) .unit-top-grid-item {
       grid-row: 2 / 7;
       grid-column: 7 / 20;
       display: flex;
@@ -2910,7 +2718,7 @@ onBeforeUnmount(() => {
       padding-left: 4px;
     }
 
-    .unit-vertical-label {
+    :where(.big99-page-wrapper) .unit-vertical-label {
       width: 32px;
       background: var(--border-green);
       color: #fff;
@@ -2929,7 +2737,7 @@ onBeforeUnmount(() => {
       height: 138px;
     }
 
-    .unit-top-columns {
+    :where(.big99-page-wrapper) .unit-top-columns {
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 1.15fr 1.15fr 0.88fr;
@@ -2938,7 +2746,7 @@ onBeforeUnmount(() => {
       border-radius: 0 8px 0 0;
     }
 
-    .unit-col {
+    :where(.big99-page-wrapper) .unit-col {
       padding: 4px 6px;
       border-right: 1.5px solid var(--border-green);
       font-size: 11px;
@@ -2948,11 +2756,11 @@ onBeforeUnmount(() => {
       justify-content: center;
     }
 
-    .unit-col:last-child {
+    :where(.big99-page-wrapper) .unit-col:last-child {
       border-right: none;
     }
 
-    .unit-col-title {
+    :where(.big99-page-wrapper) .unit-col-title {
       color: #d92323;
       font-weight: 800;
       font-size: 12px;
@@ -2962,7 +2770,7 @@ onBeforeUnmount(() => {
       justify-content: space-between;
     }
 
-    .unit-item {
+    :where(.big99-page-wrapper) .unit-item {
       cursor: pointer;
       border-radius: 4px;
       padding: 0 2px;
@@ -2970,16 +2778,17 @@ onBeforeUnmount(() => {
       white-space: nowrap;
     }
 
-    .unit-item:hover, .unit-item:active {
+    :where(.big99-page-wrapper) .unit-item:hover,
+    :where(.big99-page-wrapper) .unit-item:active {
       background: #fff3cd;
     }
 
-    .unit-item b {
+    :where(.big99-page-wrapper) .unit-item b {
       color: #d92323;
     }
 
     /* Unit Conversion Bottom Box: Rows 7-10 (inclusive), Cols 11-19 (inclusive) */
-    .unit-bottom-grid-item {
+    :where(.big99-page-wrapper) .unit-bottom-grid-item {
       grid-row: 7 / 11;
       grid-column: 11 / 20;
       border: 2px solid var(--border-green);
@@ -2995,20 +2804,20 @@ onBeforeUnmount(() => {
       justify-content: center;
     }
 
-    .unit-bottom-section + .unit-bottom-section {
+    :where(.big99-page-wrapper) .unit-bottom-section + .unit-bottom-section {
       border-top: 1.5px dashed var(--border-green);
       margin-top: 3px;
       padding-top: 3px;
     }
 
-    .unit-row-flex {
+    :where(.big99-page-wrapper) .unit-row-flex {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
 
     /* Legend Panel: Placed strictly in Rows 11-15 (inclusive), Cols 16-19 (inclusive) */
-    .legend-grid-item {
+    :where(.big99-page-wrapper) .legend-grid-item {
       grid-row: 11 / 16;
       grid-column: 16 / 20;
       background: #fffef7;
@@ -3024,12 +2833,12 @@ onBeforeUnmount(() => {
     }
 
     /* In 9x9 focus mode, place Legend in Rows 1-5, Cols 6-9 (empty upper right of 9x9!) */
-    .mul-grid.xiao99-focus-mode .legend-grid-item {
+    :where(.big99-page-wrapper) .mul-grid.xiao99-focus-mode .legend-grid-item {
       grid-row: 1 / 5;
       grid-column: 6 / 10;
     }
 
-    .legend-title {
+    :where(.big99-page-wrapper) .legend-title {
       color: #d92323;
       font-size: 15px;
       font-weight: 900;
@@ -3039,13 +2848,13 @@ onBeforeUnmount(() => {
       justify-content: space-between;
     }
 
-    .legend-grid {
+    :where(.big99-page-wrapper) .legend-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 4px 6px;
     }
 
-    .legend-item {
+    :where(.big99-page-wrapper) .legend-item {
       display: flex;
       align-items: center;
       gap: 5px;
@@ -3056,7 +2865,7 @@ onBeforeUnmount(() => {
       border-radius: 6px;
     }
 
-    .legend-swatch {
+    :where(.big99-page-wrapper) .legend-swatch {
       width: 24px;
       height: 16px;
       border: 1px solid #b5b08f;
@@ -3064,7 +2873,7 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
     }
 
-    .legend-text-rows {
+    :where(.big99-page-wrapper) .legend-text-rows {
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -3074,7 +2883,7 @@ onBeforeUnmount(() => {
       padding-top: 3px;
     }
 
-    .legend-text-row {
+    :where(.big99-page-wrapper) .legend-text-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -3084,7 +2893,7 @@ onBeforeUnmount(() => {
     }
 
     /* ================= MODAL FOR 3-STEP LEARNING (Cognitive Reinforcement Edition) ================= */
-    .modal-overlay {
+    :where(.big99-page-wrapper) .modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(15, 35, 22, 0.68);
@@ -3097,17 +2906,17 @@ onBeforeUnmount(() => {
       padding: 12px;
     }
 
-    .modal-overlay.open {
+    :where(.big99-page-wrapper) .modal-overlay.open {
       display: flex;
-      animation: fadeIn 0.2s ease;
+      animation: big99-fadeIn 0.2s ease;
     }
 
-    @keyframes fadeIn {
+    @keyframes big99-fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
 
-    .learning-modal {
+    :where(.big99-page-wrapper) .learning-modal {
       background: #fffef9;
       width: 100%;
       max-width: 820px;
@@ -3120,15 +2929,15 @@ onBeforeUnmount(() => {
       position: relative;
       display: flex;
       flex-direction: column;
-      animation: slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: big99-slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    @keyframes slideUp {
+    @keyframes big99-slideUp {
       from { transform: translateY(24px) scale(0.95); opacity: 0; }
       to { transform: translateY(0) scale(1); opacity: 1; }
     }
 
-    .modal-header {
+    :where(.big99-page-wrapper) .modal-header {
       background: linear-gradient(135deg, #1f9d4c, #34c759);
       color: #fff;
       padding: 12px 20px;
@@ -3138,13 +2947,13 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
     }
 
-    .modal-title-group {
+    :where(.big99-page-wrapper) .modal-title-group {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .modal-badge {
+    :where(.big99-page-wrapper) .modal-badge {
       background: #ffd600;
       color: #8c1d00;
       padding: 4px 12px;
@@ -3153,7 +2962,7 @@ onBeforeUnmount(() => {
       font-weight: 900;
     }
 
-    .modal-close {
+    :where(.big99-page-wrapper) .modal-close {
       background: rgba(255,255,255,0.24);
       border: none;
       color: #fff;
@@ -3166,7 +2975,7 @@ onBeforeUnmount(() => {
     }
 
     /* 3-Step Stepper Navigation */
-    .stepper-bar {
+    :where(.big99-page-wrapper) .stepper-bar {
       display: flex;
       background: #eef8f1;
       padding: 8px 18px;
@@ -3175,7 +2984,7 @@ onBeforeUnmount(() => {
       flex-shrink: 0;
     }
 
-    .step-pill {
+    :where(.big99-page-wrapper) .step-pill {
       flex: 1;
       display: flex;
       align-items: center;
@@ -3193,20 +3002,20 @@ onBeforeUnmount(() => {
       transition: all 0.2s;
     }
 
-    .step-pill.active {
+    :where(.big99-page-wrapper) .step-pill.active {
       background: linear-gradient(135deg, #ff9800, #ff5722);
       color: #fff;
       border-color: #e64a19;
       box-shadow: 0 4px 10px rgba(255, 87, 34, 0.32);
     }
 
-    .step-pill.done {
+    :where(.big99-page-wrapper) .step-pill.done {
       background: #e8f5e9;
       color: #1b5e20;
       border-color: #66bb6a;
     }
 
-    .modal-.big99-page-wrapper {
+    :where(.big99-page-wrapper) .modal-body {
       padding: 14px 20px 18px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -3217,14 +3026,14 @@ onBeforeUnmount(() => {
     }
 
     /* Step 1: Parrot Read Along with Fading Prompt & Neighbor Anchor */
-    .step1-top-row {
+    :where(.big99-page-wrapper) .step1-top-row {
       display: grid;
       grid-template-columns: 1.2fr 1fr;
       gap: 12px;
       margin-bottom: 10px;
     }
 
-    .equation-hero {
+    :where(.big99-page-wrapper) .equation-hero {
       text-align: center;
       background: linear-gradient(135deg, #fff8e1, #ffe0b2);
       border: 3px solid #ffb74d;
@@ -3236,7 +3045,7 @@ onBeforeUnmount(() => {
       justify-content: center;
     }
 
-    .equation-big {
+    :where(.big99-page-wrapper) .equation-big {
       font-size: 44px;
       font-weight: 900;
       color: #d84315;
@@ -3244,16 +3053,16 @@ onBeforeUnmount(() => {
       text-shadow: 2px 3px 0 #fff;
     }
 
-    .mystery-box {
+    :where(.big99-page-wrapper) .mystery-box {
       display: inline-block;
       background: #ff6d00;
       color: #fff;
       padding: 0 14px;
       border-radius: 12px;
-      animation: pulseAlert 0.9s infinite alternate;
+      animation: big99-pulseAlert 0.9s infinite alternate;
     }
 
-    .equation-chant {
+    :where(.big99-page-wrapper) .equation-chant {
       font-size: 19px;
       font-weight: 900;
       color: #1565c0;
@@ -3264,7 +3073,7 @@ onBeforeUnmount(() => {
       border: 2px dashed #64b5f6;
     }
 
-    .parrot-stage {
+    :where(.big99-page-wrapper) .parrot-stage {
       background: linear-gradient(135deg, #e1f5fe, #f3e5f5);
       border: 3px solid #81d4fa;
       border-radius: 20px;
@@ -3276,22 +3085,22 @@ onBeforeUnmount(() => {
       text-align: center;
     }
 
-    .parrot-avatar {
+    :where(.big99-page-wrapper) .parrot-avatar {
       font-size: 46px;
       display: inline-block;
       transition: transform 0.25s;
     }
 
-    .parrot-avatar.dancing {
-      animation: parrotBounce 0.35s ease infinite alternate;
+    :where(.big99-page-wrapper) .parrot-avatar.dancing {
+      animation: big99-parrotBounce 0.35s ease infinite alternate;
     }
 
-    @keyframes parrotBounce {
+    @keyframes big99-parrotBounce {
       0% { transform: translateY(0) rotate(-10deg) scale(1.05); }
       100% { transform: translateY(-8px) rotate(10deg) scale(1.16); }
     }
 
-    .sound-wave-bars {
+    :where(.big99-page-wrapper) .sound-wave-bars {
       display: flex;
       gap: 4px;
       height: 14px;
@@ -3299,23 +3108,23 @@ onBeforeUnmount(() => {
       margin-top: 4px;
     }
 
-    .wave-bar {
+    :where(.big99-page-wrapper) .wave-bar {
       width: 5px;
       height: 5px;
       background: #ff4081;
       border-radius: 99px;
     }
 
-    .sound-wave-bars.active .wave-bar {
-      animation: waveJump 0.3s ease infinite alternate;
+    :where(.big99-page-wrapper) .sound-wave-bars.active .wave-bar {
+      animation: big99-waveJump 0.3s ease infinite alternate;
     }
 
-    @keyframes waveJump {
+    @keyframes big99-waveJump {
       0% { height: 5px; }
       100% { height: 15px; }
     }
 
-    .scaffold-bridge-card {
+    :where(.big99-page-wrapper) .scaffold-bridge-card {
       background: #fff3e0;
       border: 2px solid #ffb74d;
       border-radius: 14px;
@@ -3330,7 +3139,7 @@ onBeforeUnmount(() => {
       gap: 6px;
     }
 
-    .visual-blocks-card {
+    :where(.big99-page-wrapper) .visual-blocks-card {
       background: #f1f8e9;
       border: 2px solid #a5d6a7;
       border-radius: 14px;
@@ -3340,38 +3149,38 @@ onBeforeUnmount(() => {
       color: #1b5e20;
     }
 
-    .read-controls {
+    :where(.big99-page-wrapper) .read-controls {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
     }
 
-    .stars-slot {
+    :where(.big99-page-wrapper) .stars-slot {
       display: flex;
       gap: 16px;
       align-items: center;
     }
 
-    .read-star {
+    :where(.big99-page-wrapper) .read-star {
       font-size: 34px;
       filter: grayscale(100%) opacity(0.32);
       transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
     }
 
-    .read-star.lit {
+    :where(.big99-page-wrapper) .read-star.lit {
       filter: none;
       transform: scale(1.22);
     }
 
-    .read-btn-group {
+    :where(.big99-page-wrapper) .read-btn-group {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
-    .big-btn {
+    :where(.big99-page-wrapper) .big-btn {
       border: none;
       padding: 11px 20px;
       min-height: 46px;
@@ -3385,30 +3194,30 @@ onBeforeUnmount(() => {
       transition: transform 0.15s;
     }
 
-    .big-btn:active {
+    :where(.big99-page-wrapper) .big-btn:active {
       transform: scale(0.95);
     }
 
-    .big-btn.listen-btn {
+    :where(.big99-page-wrapper) .big-btn.listen-btn {
       background: #1e88e5;
       color: #fff;
       box-shadow: 0 4px 0 #1565c0;
     }
 
-    .big-btn.follow-btn {
+    :where(.big99-page-wrapper) .big-btn.follow-btn {
       background: linear-gradient(135deg, #ff6d00, #ff3d00);
       color: #fff;
       box-shadow: 0 4px 0 #bf360c;
     }
 
-    .big-btn.next-step-btn {
+    :where(.big99-page-wrapper) .big-btn.next-step-btn {
       background: linear-gradient(135deg, #2e7d32, #43a047);
       color: #fff;
       box-shadow: 0 4px 0 #1b5e20;
     }
 
     /* ================= STEP 2: ACTIVE-RECALL MINI GAMES ================= */
-    .game-tabs {
+    :where(.big99-page-wrapper) .game-tabs {
       display: flex;
       justify-content: center;
       gap: 8px;
@@ -3416,7 +3225,7 @@ onBeforeUnmount(() => {
       flex-wrap: wrap;
     }
 
-    .game-tab-btn {
+    :where(.big99-page-wrapper) .game-tab-btn {
       padding: 7px 13px;
       min-height: 38px;
       border-radius: 999px;
@@ -3428,14 +3237,14 @@ onBeforeUnmount(() => {
       cursor: pointer;
     }
 
-    .game-tab-btn.active {
+    :where(.big99-page-wrapper) .game-tab-btn.active {
       background: linear-gradient(135deg, #ff8f00, #f57c00);
       color: #fff;
       border-color: #e65100;
       box-shadow: 0 3px 8px rgba(245, 124, 0, 0.35);
     }
 
-    .game-arena {
+    :where(.big99-page-wrapper) .game-arena {
       background: linear-gradient(180deg, #e0f7fa 0%, #fff9c4 65%, #c8e6c9 100%);
       border: 3px solid #4dd0e1;
       border-radius: 20px;
@@ -3449,7 +3258,7 @@ onBeforeUnmount(() => {
       justify-content: space-between;
     }
 
-    .game-prompt {
+    :where(.big99-page-wrapper) .game-prompt {
       font-size: 15px;
       font-weight: 900;
       color: #004d40;
@@ -3463,7 +3272,7 @@ onBeforeUnmount(() => {
     }
 
     /* Game 1: Hungry Dino Feeding with Active Counting Check */
-    .dino-stage {
+    :where(.big99-page-wrapper) .dino-stage {
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -3472,7 +3281,7 @@ onBeforeUnmount(() => {
       margin-top: 4px;
     }
 
-    .dino-character-row {
+    :where(.big99-page-wrapper) .dino-character-row {
       display: flex;
       align-items: center;
       gap: 14px;
@@ -3482,20 +3291,20 @@ onBeforeUnmount(() => {
       border: 2px dashed #81c784;
     }
 
-    .dino-avatar {
+    :where(.big99-page-wrapper) .dino-avatar {
       font-size: 54px;
       transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       cursor: pointer;
     }
 
-    .dino-speech {
+    :where(.big99-page-wrapper) .dino-speech {
       font-size: 14px;
       font-weight: 900;
       color: #2e7d32;
       max-width: 380px;
     }
 
-    .dino-plates-conveyor {
+    :where(.big99-page-wrapper) .dino-plates-conveyor {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -3503,7 +3312,7 @@ onBeforeUnmount(() => {
       padding: 4px;
     }
 
-    .food-plate {
+    :where(.big99-page-wrapper) .food-plate {
       background: #fff;
       border: 3px solid #ffb74d;
       border-radius: 16px;
@@ -3516,19 +3325,19 @@ onBeforeUnmount(() => {
       transition: transform 0.15s;
     }
 
-    .food-plate:active {
+    :where(.big99-page-wrapper) .food-plate:active {
       transform: scale(0.93);
     }
 
     /* Game 2: Whack-a-Mole (Uniform Moles — No Answer Spoiler Glow!) */
-    .mole-grid {
+    :where(.big99-page-wrapper) .mole-grid {
       display: grid;
       grid-template-columns: repeat(3, 132px);
       gap: 12px 20px;
       margin: 6px auto;
     }
 
-    .mole-hole {
+    :where(.big99-page-wrapper) .mole-hole {
       height: 68px;
       background: radial-gradient(ellipse at center, #4e342e 0%, #3e2723 70%, #8d6e63 100%);
       border-radius: 50%;
@@ -3540,7 +3349,7 @@ onBeforeUnmount(() => {
       cursor: pointer;
     }
 
-    .mole-critter {
+    :where(.big99-page-wrapper) .mole-critter {
       position: absolute;
       bottom: 8px;
       background: linear-gradient(180deg, #ffca28, #ffb300);
@@ -3562,20 +3371,20 @@ onBeforeUnmount(() => {
       pointer-events: none;
     }
 
-    .mole-critter.up {
+    :where(.big99-page-wrapper) .mole-critter.up {
       transform: translateY(-6px) scale(1);
       opacity: 1;
       pointer-events: auto;
     }
 
-    .mole-critter.bonked {
+    :where(.big99-page-wrapper) .mole-critter.bonked {
       transform: translateY(8px) scale(0.85, 0.55) !important;
       background: #ef5350;
       color: #fff;
     }
 
     /* Game 3: Balloon Pop Carnival Shooter (Blind Recall) */
-    .balloon-sky {
+    :where(.big99-page-wrapper) .balloon-sky {
       width: 100%;
       height: 180px;
       position: relative;
@@ -3585,7 +3394,7 @@ onBeforeUnmount(() => {
       padding: 8px;
     }
 
-    .carnival-balloon {
+    :where(.big99-page-wrapper) .carnival-balloon {
       width: 88px;
       height: 102px;
       border-radius: 50% 50% 48% 48%;
@@ -3598,11 +3407,11 @@ onBeforeUnmount(() => {
       cursor: pointer;
       position: relative;
       box-shadow: inset -8px -8px 16px rgba(0,0,0,0.2), inset 8px 8px 16px rgba(255,255,255,0.5), 0 8px 16px rgba(0,0,0,0.15);
-      animation: balloonBob 1.8s ease-in-out infinite alternate;
+      animation: big99-balloonBob 1.8s ease-in-out infinite alternate;
       transition: transform 0.15s, opacity 0.15s;
     }
 
-    .carnival-balloon::after {
+    :where(.big99-page-wrapper) .carnival-balloon::after {
       content: '';
       position: absolute;
       bottom: -14px;
@@ -3611,13 +3420,13 @@ onBeforeUnmount(() => {
       background: #888;
     }
 
-    @keyframes balloonBob {
+    @keyframes big99-balloonBob {
       0% { transform: translateY(-6px) rotate(-3deg); }
       100% { transform: translateY(6px) rotate(3deg); }
     }
 
     /* Game 4: Rainbow Stamp Pad with Active Sum Question */
-    .stamp-board {
+    :where(.big99-page-wrapper) .stamp-board {
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -3625,7 +3434,7 @@ onBeforeUnmount(() => {
       gap: 8px;
     }
 
-    .stamp-rows-box {
+    :where(.big99-page-wrapper) .stamp-rows-box {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
@@ -3637,7 +3446,7 @@ onBeforeUnmount(() => {
       width: 100%;
     }
 
-    .stamp-row-chip {
+    :where(.big99-page-wrapper) .stamp-row-chip {
       background: #fff;
       border: 2px solid #ab47bc;
       border-radius: 12px;
@@ -3649,11 +3458,11 @@ onBeforeUnmount(() => {
       align-items: center;
       gap: 5px;
       box-shadow: 0 3px 0 #ce93d8;
-      animation: popIn 0.25s ease;
+      animation: big99-popIn 0.25s ease;
     }
 
     /* Step 3: Battle Quiz & Spaced-Repetition Guard Battle */
-    .battle-stage {
+    :where(.big99-page-wrapper) .battle-stage {
       background: linear-gradient(135deg, #ede7f6, #fff8e1);
       border: 3px solid #b39ddb;
       border-radius: 20px;
@@ -3662,7 +3471,7 @@ onBeforeUnmount(() => {
       margin-bottom: 8px;
     }
 
-    .battle-fighters {
+    :where(.big99-page-wrapper) .battle-fighters {
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -3672,19 +3481,19 @@ onBeforeUnmount(() => {
       border-radius: 14px;
     }
 
-    .fighter-box {
+    :where(.big99-page-wrapper) .fighter-box {
       display: flex;
       align-items: center;
       gap: 8px;
       font-weight: 900;
     }
 
-    .monster-hp {
+    :where(.big99-page-wrapper) .monster-hp {
       font-size: 19px;
       letter-spacing: 3px;
     }
 
-    .quiz-question-text {
+    :where(.big99-page-wrapper) .quiz-question-text {
       font-size: 21px;
       font-weight: 900;
       color: #4a148c;
@@ -3692,7 +3501,7 @@ onBeforeUnmount(() => {
       line-height: 1.35;
     }
 
-    .quiz-options {
+    :where(.big99-page-wrapper) .quiz-options {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
@@ -3700,7 +3509,7 @@ onBeforeUnmount(() => {
       margin: 0 auto;
     }
 
-    .quiz-opt-btn {
+    :where(.big99-page-wrapper) .quiz-opt-btn {
       background: #fff;
       border: 3px solid #90caf9;
       border-radius: 16px;
@@ -3714,25 +3523,25 @@ onBeforeUnmount(() => {
       box-shadow: 0 4px 0 #64b5f6;
     }
 
-    .quiz-opt-btn:active {
+    :where(.big99-page-wrapper) .quiz-opt-btn:active {
       transform: translateY(2px);
     }
 
-    .quiz-opt-btn.correct {
+    :where(.big99-page-wrapper) .quiz-opt-btn.correct {
       background: #43a047;
       color: #fff;
       border-color: #2e7d32;
       box-shadow: 0 4px 0 #1b5e20;
     }
 
-    .quiz-opt-btn.wrong {
+    :where(.big99-page-wrapper) .quiz-opt-btn.wrong {
       background: #ef5350;
       color: #fff;
       border-color: #c62828;
       box-shadow: 0 4px 0 #b71c1c;
     }
 
-    .feedback-banner {
+    :where(.big99-page-wrapper) .feedback-banner {
       text-align: center;
       font-weight: 900;
       font-size: 14.5px;
@@ -3742,7 +3551,7 @@ onBeforeUnmount(() => {
 
     
     /* ================= KID HANDWRITING PROFILE BADGE & NEW MODALS ================= */
-    .profile-badge-box {
+    :where(.big99-page-wrapper) .profile-badge-box {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -3755,11 +3564,11 @@ onBeforeUnmount(() => {
       transition: transform 0.15s;
     }
 
-    .profile-badge-box:active {
+    :where(.big99-page-wrapper) .profile-badge-box:active {
       transform: scale(0.95);
     }
 
-    .profile-sig-img {
+    :where(.big99-page-wrapper) .profile-sig-img {
       height: 26px;
       max-width: 110px;
       object-fit: contain;
@@ -3770,18 +3579,18 @@ onBeforeUnmount(() => {
       display: none;
     }
 
-    .profile-sig-img.visible {
+    :where(.big99-page-wrapper) .profile-sig-img.visible {
       display: inline-block;
     }
 
-    .action-btn.history-btn {
+    :where(.big99-page-wrapper) .action-btn.history-btn {
       background: linear-gradient(135deg, #0288d1, #26c6da);
       color: #fff;
       box-shadow: 0 3px 10px rgba(2, 136, 209, 0.3);
     }
 
     /* Handwriting Canvas Pad with TianZiGe Guide */
-    .handwriting-wrap {
+    :where(.big99-page-wrapper) .handwriting-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -3789,7 +3598,7 @@ onBeforeUnmount(() => {
       margin: 8px 0;
     }
 
-    .canvas-frame {
+    :where(.big99-page-wrapper) .canvas-frame {
       position: relative;
       background: #fffef9;
       border: 4px solid #ff9800;
@@ -3806,7 +3615,7 @@ onBeforeUnmount(() => {
       background-size: 90px 100px;
     }
 
-    #signatureCanvas {
+    :where(.big99-page-wrapper) #signatureCanvas {
       width: 100%;
       height: 100%;
       display: block;
@@ -3814,7 +3623,7 @@ onBeforeUnmount(() => {
       touch-action: none;
     }
 
-    .canvas-placeholder-hint {
+    :where(.big99-page-wrapper) .canvas-placeholder-hint {
       position: absolute;
       inset: 0;
       display: flex;
@@ -3827,7 +3636,7 @@ onBeforeUnmount(() => {
       letter-spacing: 4px;
     }
 
-    .pen-toolbar {
+    :where(.big99-page-wrapper) .pen-toolbar {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -3835,7 +3644,7 @@ onBeforeUnmount(() => {
       justify-content: center;
     }
 
-    .pen-color-dot {
+    :where(.big99-page-wrapper) .pen-color-dot {
       width: 32px;
       height: 32px;
       border-radius: 50%;
@@ -3845,12 +3654,12 @@ onBeforeUnmount(() => {
       transition: transform 0.15s;
     }
 
-    .pen-color-dot.active {
+    :where(.big99-page-wrapper) .pen-color-dot.active {
       transform: scale(1.25);
       outline: 3px solid #ff9800;
     }
 
-    .kid-name-input {
+    :where(.big99-page-wrapper) .kid-name-input {
       padding: 9px 16px;
       border-radius: 999px;
       border: 2.5px solid #90caf9;
@@ -3864,13 +3673,13 @@ onBeforeUnmount(() => {
       -webkit-user-select: text;
     }
 
-    .kid-name-input:focus {
+    :where(.big99-page-wrapper) .kid-name-input:focus {
       border-color: #1e88e5;
       box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
     }
 
     /* History & Achievements Modal Styles */
-    .history-cert-banner {
+    :where(.big99-page-wrapper) .history-cert-banner {
       background: linear-gradient(135deg, #fff8e1, #ffecb3);
       border: 3px solid #ffb300;
       border-radius: 20px;
@@ -3883,7 +3692,7 @@ onBeforeUnmount(() => {
       margin-bottom: 12px;
     }
 
-    .history-stats-grid {
+    :where(.big99-page-wrapper) .history-stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
@@ -3891,12 +3700,12 @@ onBeforeUnmount(() => {
     }
 
     @media (max-width: 640px) {
-      .history-stats-grid {
+      :where(.big99-page-wrapper) .history-stats-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    .history-stat-card {
+    :where(.big99-page-wrapper) .history-stat-card {
       background: #f1f8e9;
       border: 2px solid #a5d6a7;
       border-radius: 16px;
@@ -3904,20 +3713,20 @@ onBeforeUnmount(() => {
       text-align: center;
     }
 
-    .history-stat-num {
+    :where(.big99-page-wrapper) .history-stat-num {
       font-size: 24px;
       font-weight: 900;
       color: #2e7d32;
     }
 
-    .history-stat-label {
+    :where(.big99-page-wrapper) .history-stat-label {
       font-size: 12px;
       font-weight: 800;
       color: #556b2f;
       margin-top: 2px;
     }
 
-    .achievements-grid {
+    :where(.big99-page-wrapper) .achievements-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
@@ -3925,12 +3734,12 @@ onBeforeUnmount(() => {
     }
 
     @media (max-width: 640px) {
-      .achievements-grid {
+      :where(.big99-page-wrapper) .achievements-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    .ach-card {
+    :where(.big99-page-wrapper) .ach-card {
       background: #fafafa;
       border: 2px dashed #ccc;
       border-radius: 14px;
@@ -3941,7 +3750,7 @@ onBeforeUnmount(() => {
       transition: all 0.2s;
     }
 
-    .ach-card.unlocked {
+    :where(.big99-page-wrapper) .ach-card.unlocked {
       background: linear-gradient(135deg, #fffde7, #fff3e0);
       border: 2px solid #ffb300;
       opacity: 1;
@@ -3949,7 +3758,7 @@ onBeforeUnmount(() => {
       box-shadow: 0 3px 8px rgba(255, 179, 0, 0.18);
     }
 
-    .daily-timeline-list {
+    :where(.big99-page-wrapper) .daily-timeline-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -3959,14 +3768,14 @@ onBeforeUnmount(() => {
       padding-right: 4px;
     }
 
-    .daily-card {
+    :where(.big99-page-wrapper) .daily-card {
       background: #fff;
       border: 2px solid #dcebe0;
       border-radius: 16px;
       padding: 10px 14px;
     }
 
-    .daily-card-header {
+    :where(.big99-page-wrapper) .daily-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -3978,14 +3787,14 @@ onBeforeUnmount(() => {
       padding-bottom: 4px;
     }
 
-    .daily-eq-chips {
+    :where(.big99-page-wrapper) .daily-eq-chips {
       display: flex;
       flex-wrap: wrap;
       gap: 5px;
       margin-bottom: 6px;
     }
 
-    .daily-eq-chip {
+    :where(.big99-page-wrapper) .daily-eq-chip {
       background: #fff8e1;
       border: 1.5px solid #ffd54f;
       border-radius: 8px;
@@ -3996,7 +3805,7 @@ onBeforeUnmount(() => {
     }
 
     /* Toast Notification */
-    .app-toast {
+    :where(.big99-page-wrapper) .app-toast {
       position: fixed;
       top: 20px;
       left: 50%;
@@ -4014,12 +3823,12 @@ onBeforeUnmount(() => {
       pointer-events: none;
     }
 
-    .app-toast.show {
+    :where(.big99-page-wrapper) .app-toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
 
-    #confettiCanvas {
+    :where(.big99-page-wrapper) #confettiCanvas {
       position: fixed;
       inset: 0;
       pointer-events: none;

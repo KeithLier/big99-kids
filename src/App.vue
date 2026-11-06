@@ -16,7 +16,7 @@
           </div>
         </router-link>
 
-        <nav class="nav-links" aria-label="主导航">
+        <nav ref="navLinksRef" class="nav-links" aria-label="主导航">
           <router-link to="/" class="nav-pill" exact-active-class="active" @click="playClickSound">
             <span>🏠</span> 成长中心
           </router-link>
@@ -90,13 +90,16 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import SignatureModal from './components/SignatureModal.vue'
 import FloatingVoiceRecorder from './components/FloatingVoiceRecorder.vue'
 import { useKidsProfile } from './composables/useKidsProfile'
 import { useSound } from './composables/useSound'
 import { useVoiceStudio } from './composables/useVoiceStudio'
 
+const route = useRoute()
+const navLinksRef = ref(null)
 const {
   kidProfile,
   showProfileModal,
@@ -105,11 +108,31 @@ const {
   refreshFromStorage
 } = useKidsProfile()
 
-const { soundEnabled, toggleSound, playClickSound } = useSound()
+const { soundEnabled, toggleSound, playClickSound, stopSpeech } = useSound()
 const { currentRoleObj } = useVoiceStudio()
+
+function scrollActiveNavIntoView() {
+  nextTick(() => {
+    const navEl = navLinksRef.value
+    if (!navEl || navEl.scrollWidth <= navEl.clientWidth) return
+    const activeEl = navEl.querySelector('.nav-pill.active')
+    if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+      activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    }
+  })
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    stopSpeech()
+    scrollActiveNavIntoView()
+  }
+)
 
 onMounted(() => {
   refreshFromStorage()
+  scrollActiveNavIntoView()
 })
 </script>
 
@@ -392,7 +415,43 @@ onMounted(() => {
   opacity: 1;
 }
 
-@media (max-width: 1080px) {
+/* iPad 横屏 (1024px ~ 1260px)：单行紧凑排布 7 个导航胶囊，无需折行 */
+@media (min-width: 1024px) and (max-width: 1260px) {
+  .global-navbar {
+    padding: 8px 14px;
+  }
+  .nav-inner {
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .brand-sub,
+  .brand-version-badge {
+    display: none;
+  }
+  .brand-title {
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .nav-links {
+    flex-wrap: nowrap;
+    gap: 2px;
+    padding: 3px;
+  }
+  .nav-pill {
+    padding: 6px 9px;
+    font-size: 12.5px;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .kid-profile-pill {
+    padding: 3px 10px 3px 5px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+/* iPad 竖屏及移动端 (<= 1023px)：双行横向顺滑滚动 + 边缘渐隐提示 */
+@media (max-width: 1023px) {
   .global-navbar {
     padding: 8px 16px;
   }
@@ -408,6 +467,9 @@ onMounted(() => {
     order: 3;
     width: 100%;
     justify-content: flex-start;
+    scroll-padding: 0 24px;
+    mask-image: linear-gradient(to right, #000 92%, rgba(0, 0, 0, 0.25) 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 92%, rgba(0, 0, 0, 0.25) 100%);
   }
   .nav-links::-webkit-scrollbar {
     display: none;

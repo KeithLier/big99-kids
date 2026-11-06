@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useKidsProfile } from '../composables/useKidsProfile'
 import { useSound } from '../composables/useSound'
 
@@ -114,6 +114,40 @@ const errorMsg = ref('')
 const canvasRef = ref(null)
 let isDrawing = false
 let currentStroke = null
+let logicalWidth = 540
+let logicalHeight = 190
+
+function setupHiDPICanvas() {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  const dpr = Math.min(window.devicePixelRatio || 1, 3)
+  logicalWidth = Math.max(240, Math.round(rect.width || 540))
+  logicalHeight = Math.max(150, Math.round(rect.height || 190))
+
+  const targetW = Math.round(logicalWidth * dpr)
+  const targetH = Math.round(logicalHeight * dpr)
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW
+    canvas.height = targetH
+  }
+  const ctx = canvas.getContext('2d')
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+function onKeyDown(e) {
+  if (e.key === 'Escape' && showProfileModal.value) {
+    closeModal()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown)
+})
 
 watch(showProfileModal, async (open) => {
   if (open) {
@@ -126,6 +160,7 @@ watch(showProfileModal, async (open) => {
       : []
     existingDataUrl.value = kidProfile.value?.signatureDataUrl || ''
     await nextTick()
+    setupHiDPICanvas()
     redrawCanvas()
   }
 })
@@ -135,15 +170,22 @@ function getCanvasPos(e) {
   const rect = canvas.getBoundingClientRect()
   const clientX = e.touches && e.touches.length ? e.touches[0].clientX : e.clientX
   const clientY = e.touches && e.touches.length ? e.touches[0].clientY : e.clientY
+  const w = rect.width || logicalWidth
+  const h = rect.height || logicalHeight
+  const x = clientX - rect.left
+  const y = clientY - rect.top
   return {
-    x: ((clientX - rect.left) * canvas.width) / (rect.width || canvas.width),
-    y: ((clientY - rect.top) * canvas.height) / (rect.height || canvas.height)
+    x,
+    y,
+    nx: x / w,
+    ny: y / h
   }
 }
 
 function startDraw(e) {
   if (e.button !== undefined && e.button !== 0) return
   errorMsg.value = ''
+  setupHiDPICanvas()
   isDrawing = true
   existingDataUrl.value = ''
   if (canvasRef.value && e.pointerId !== undefined) {
@@ -176,16 +218,30 @@ function endDraw(e) {
   playTone(620, 0.04, 'sine')
 }
 
+function resolvePoint(pt) {
+  if (typeof pt.nx === 'number' && typeof pt.ny === 'number') {
+    return {
+      x: pt.nx * logicalWidth,
+      y: pt.ny * logicalHeight
+    }
+  }
+  return {
+    x: ((pt.x || 0) / 540) * logicalWidth,
+    y: ((pt.y || 0) / 190) * logicalHeight
+  }
+}
+
 function redrawCanvas() {
   const canvas = canvasRef.value
   if (!canvas) return
+  setupHiDPICanvas()
   const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.clearRect(0, 0, logicalWidth, logicalHeight)
 
   if (strokes.value.length === 0 && existingDataUrl.value) {
     const img = new Image()
     img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, logicalWidth, logicalHeight)
     }
     img.src = existingDataUrl.value
     return
@@ -199,12 +255,14 @@ function redrawCanvas() {
     if (!s.points || !s.points.length) return
     ctx.strokeStyle = s.color || '#d84315'
     ctx.beginPath()
-    ctx.moveTo(s.points[0].x, s.points[0].y)
+    const first = resolvePoint(s.points[0])
+    ctx.moveTo(first.x, first.y)
     for (let i = 1; i < s.points.length; i++) {
-      ctx.lineTo(s.points[i].x, s.points[i].y)
+      const pt = resolvePoint(s.points[i])
+      ctx.lineTo(pt.x, pt.y)
     }
     if (s.points.length === 1) {
-      ctx.lineTo(s.points[0].x + 0.5, s.points[0].y + 0.5)
+      ctx.lineTo(first.x + 0.5, first.y + 0.5)
     }
     ctx.stroke()
   })

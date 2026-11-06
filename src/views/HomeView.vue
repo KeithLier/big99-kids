@@ -1284,6 +1284,9 @@ onMounted(() => {
   .mini-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .mini-stat:last-child {
+    grid-column: 1 / -1;
+  }
   .stickers-grid {
     grid-template-columns: repeat(2, 1fr);
   }

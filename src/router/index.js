@@ -56,7 +56,13 @@ const router = createRouter({
       alias: ['/china-geo', '/geo'],
       name: 'geography',
       component: () => import('../views/ChinaGeoView.vue'),
-      meta: { title: '🗺️ 中国地理百科乐园 - 34省市地图与城市风景美食文化语音点读' }
+      meta: { title: '🗺️ 中国地理百科乐园 - 34省市区标准地图' }
+    },
+    {
+      path: '/geography/:adcode',
+      name: 'geo-province',
+      component: () => import('../views/GeoProvinceView.vue'),
+      meta: { title: '🗺️ 省份城市地图与百科详情' }
     },
     {
       path: '/:pathMatch(.*)*',
@@ -65,9 +71,12 @@ const router = createRouter({
   ]
 })
 
-router.afterEach((to) => {
+router.afterEach((to, from) => {
   if (to.meta && to.meta.title) {
     document.title = to.meta.title
+  }
+  if (to.path !== from.path && typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }
 })
 

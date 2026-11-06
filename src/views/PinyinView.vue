@@ -741,6 +741,12 @@ function handleSelectCard(item) {
     showToast(`✨ 点亮拼音精灵【${item.code}】！智慧值 +1`)
   }
   speakPinyinItem(item)
+  if (typeof window !== 'undefined' && window.innerWidth <= 1023 && learningStageRef.value) {
+    const rect = learningStageRef.value.getBoundingClientRect()
+    if (rect.top < -140) {
+      learningStageRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 }
 
 // 100% 纯正汉语拼音读音（使用 chantSpeak 替代含拉丁字母的 chant）

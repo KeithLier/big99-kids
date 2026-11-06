@@ -7,14 +7,24 @@
   "scripts": {
     "dev": "node ./run-vite.mjs",
     "build": "node ./run-vite.mjs build",
-    "preview": "node ./run-vite.mjs preview"
+    "preview": "node ./run-vite.mjs preview",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.0"
+    "@vitejs/plugin-vue": "^6.0.10",
+    "eslint": "^9.39.4",
+    "eslint-plugin-vue": "^10.12.0",
+    "globals": "^16.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

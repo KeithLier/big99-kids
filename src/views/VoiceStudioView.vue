@@ -406,7 +406,7 @@
               <div class="report-stat">
                 <span class="r-label">当前引擎状态</span>
                 <span class="r-val">
-                  {{ voiceSettings.aiCloneEnabled && voiceSettings.aiApiKey ? '🤖 AI 零样本高保真克隆' : '⚡ 本地声纹智能拟真' }}
+                  {{ voiceSettings.aiCloneEnabled && (voiceSettings.aiProvider === 'custom' ? voiceSettings.aiCustomApiKey : voiceSettings.aiApiKey) ? '🤖 AI 零样本高保真克隆' : '⚡ 本地声纹智能拟真' }}
                 </span>
               </div>
             </div>
@@ -506,7 +506,7 @@
               </div>
 
               <div class="form-group">
-                <label>API Key（仅保存在您本地浏览器）：</label>
+                <label>硅基流动 API Key（仅本次页面会话有效，不会导出）：</label>
                 <input
                   v-model="aiForm.aiApiKey"
                   type="password"
@@ -514,6 +514,11 @@
                   placeholder="输入 sk-... 开头的 API Key"
                   @blur="saveAiForm"
                 />
+              </div>
+
+              <div v-if="aiForm.aiProvider === 'custom'" class="form-group">
+                <label>自定义服务 API Key（仅本次页面会话有效）：</label>
+                <input v-model="aiForm.aiCustomApiKey" type="password" class="text-input" placeholder="输入自定义服务专用 Key" @blur="saveAiForm" />
               </div>
 
               <div class="form-group">
@@ -879,6 +884,7 @@ const aiForm = reactive({
   aiCloneEnabled: voiceSettings.value.aiCloneEnabled,
   aiProvider: voiceSettings.value.aiProvider || 'siliconflow',
   aiApiKey: voiceSettings.value.aiApiKey || '',
+  aiCustomApiKey: voiceSettings.value.aiCustomApiKey || '',
   aiModel: voiceSettings.value.aiModel || 'FunAudioLLM/CosyVoice2-0.5B',
   aiCustomEndpoint: voiceSettings.value.aiCustomEndpoint || '',
   aiVoiceUri: voiceSettings.value.aiVoiceUri || ''
@@ -890,6 +896,7 @@ function saveAiForm() {
     timbreSampleText: sampleScriptText.value,
     aiRefText: sampleScriptText.value
   })
+  aiForm.aiCustomApiKey = voiceSettings.value.aiCustomApiKey || ''
 }
 
 async function startSampleRecording() {
